@@ -4,6 +4,14 @@ All notable changes to Wordplay are recorded here. Versions follow the form `maj
 
 ## 1.5.4 - Bible Brain catalogue discovery (in progress)
 
+### Found in the first discovery run
+- Languages: 2,677 in total, each with an ISO code, names, and counts of Bibles and filesets.
+- Countries: 227, with codes but no language list.
+- Bibles: 3,512 in total. Each lists its language, ISO code and filesets. Filesets have types such as `text_plain` and `audio_drama`, and sizes such as NT or C (complete).
+- The `language` filter on /bibles did not reduce the results, so filtering must use another parameter or be done during the build.
+- The fileset route used in discovery returned 404, so the chapter route needs confirming.
+
+
 ### Added
 - `discover-bible-brain.yml`: a manual workflow that calls the Bible Brain language, country, Bible and fileset endpoints and saves small samples as an artifact. It does not publish anything.
 

@@ -20,11 +20,15 @@ if not KEY:
     sys.exit("BIBLE_BRAIN_KEY secret is missing.")
 
 ENDPOINTS = [
-    ("languages", "/languages", {}),
-    ("countries", "/countries", {}),
-    ("bibles", "/bibles", {"limit": "25"}),
-    ("bibles_english", "/bibles", {"language": "eng", "limit": "25"}),
-    ("filesets_text", "/filesets/ENGKJVO1DA/GEN/1", {}),
+    # Round 2: find the country-to-language link, language filters, and the text route
+    ("country_detail", "/countries/AD", {}),
+    ("country_by_iso2", "/countries/AND", {}),
+    ("languages_in_country", "/languages", {"country": "AD", "limit": "25"}),
+    ("language_detail", "/languages/5160", {}),
+    ("bibles_by_language_id", "/bibles", {"language_id": "8076", "limit": "25"}),
+    ("bibles_by_iso", "/bibles", {"iso": "eng", "limit": "25"}),
+    ("fileset_chapter", "/bibles/filesets/ENGKJVO1DA/GEN/1", {}),
+    ("fileset_text_info", "/bibles/ENGKJV", {}),
 ]
 
 os.makedirs("discovery", exist_ok=True)
