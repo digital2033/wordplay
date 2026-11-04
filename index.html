@@ -125,6 +125,17 @@ textarea.tx-answers{min-height:44px}
 <div id="toast"></div>
 
 <script>
+/* Shows any start-up error on the page, instead of a blank screen */
+function showStartError(msg){
+  var st = document.getElementById("stage");
+  if(!st) return;
+  st.innerHTML = '<div style="padding:16px;background:#fff;color:#222;border-radius:12px;font-family:sans-serif">' +
+    '<strong>The game could not start.</strong><p>Please send this message to the developer:</p>' +
+    '<code style="display:block;white-space:pre-wrap;word-break:break-word">' + String(msg).replace(/</g, "&lt;") + '</code></div>';
+}
+window.addEventListener("error", function(e){ showStartError((e.message || "Error") + " (line " + e.lineno + ")"); });
+window.addEventListener("unhandledrejection", function(e){ showStartError("Promise error: " + (e.reason && e.reason.message ? e.reason.message : e.reason)); });
+
 /* ============================================================
    CONFIGURATION
    Add Bible Brain audio or film links here. Empty = placeholder.
@@ -633,6 +644,12 @@ function levelInfo(points){
 }
 function earnedBadges(st){ return BADGES.filter(b => b.test(st)).map(b => b.id); }
 function activePlayer(){ return DB.players[DB.activeId] || null; }
+function stage(){ return document.getElementById("stage"); }
+function audioBlock(url, label){
+  return url
+    ? `<audio controls preload="none" src="${url}" style="width:100%"></audio>`
+    : `<p class="muted">[${label} - add a Bible Brain audio or film link in CONFIG to play here]</p>`;
+}
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function toast(msg){
   const t = document.getElementById("toast");
@@ -1580,8 +1597,7 @@ if("serviceWorker" in navigator){
   window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
 }
 
-loadConfig().then(loadCatalog).then(() => {
-  /* ===== PUZZLES: Bible Crossword and Word Search ===== */
+/* ===== PUZZLES: Bible Crossword and Word Search ===== */
 const PUZZLE_BANK = [
   { book:"Genesis", title:"People and places of Genesis", words:[
     {w:"NOAH", clue:"Built the ark"}, {w:"ARK", clue:"Vessel of the great flood"}, {w:"EDEN", clue:"The first garden"},
@@ -2418,8 +2434,9 @@ function runMemoryAudio(){
   document.getElementById("mva-go").onclick = () => runMemoryText();
 }
 
-if(activePlayer()){ go("home"); } else { showProfile(true); }
-});
+loadConfig().then(loadCatalog).then(() => {
+  if(activePlayer()){ go("home"); } else { showProfile(true); }
+}).catch(e => showStartError("Start-up: " + (e && e.message ? e.message : e)));
 </script>
 </body>
 </html>

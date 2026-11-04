@@ -2,6 +2,18 @@
 
 All notable changes to Wordplay are recorded here. Versions follow the form `major.minor`.
 
+## 1.5.1 - Fixes from a full test run
+
+### Fixed
+- The game's start-up code had been wrapped around all the game code, so buttons (for example opening a game) would fail. The start-up code now runs last, and every game function is global.
+- Two shared helpers (`stage()` and `audioBlock()`) were missing. They are restored.
+- Text passages publish in the format the Bible picker reads (`text/catalog.json`).
+
+### Tested
+- Every game page and format opens without errors.
+- Typed answers are checked, Covenant Quest starts without the book chooser, audio and video formats show "Coming soon" by default, Bible Trivia draws ten questions without repeats, and passage references are parsed correctly.
+- The text download was tested against a local stand-in for Bible Brain. It has not yet been run against Bible Brain itself.
+
 ## 1.5.0 - Countries, languages and versions
 
 ### Added
