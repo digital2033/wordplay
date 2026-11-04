@@ -1,0 +1,27 @@
+name: Discover Bible Brain catalogue endpoints (manual)
+
+# Run manually from the Actions tab. It saves small samples of the responses as an
+# artifact, so the catalogue can be built around the real field names.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Call Bible Brain and save samples
+        env:
+          BIBLE_BRAIN_KEY: ${{ secrets.BIBLE_BRAIN_KEY }}
+        run: python3 scripts/discover_bible_brain.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bible-brain-discovery
+          path: discovery/
+          retention-days: 7

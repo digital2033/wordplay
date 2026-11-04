@@ -111,13 +111,17 @@ for fs, meta in enabled.items():
         time.sleep(PAUSE)
     print(f"   saved {len(downloaded[fs])} chapters")
 
-# Public catalogue: only versions with downloaded text
+# Public catalogue: every configured version (not placeholders), marked as available when its text was downloaded
 public = {"countries": []}
 for country in catalog.get("countries", []):
     c_out = {"code": country["code"], "name": country["name"], "languages": []}
     for lang in country.get("languages", []):
-        vs = [{"fileset": v["id"], "name": v["name"]} for v in lang.get("versions", [])
-              if v.get("id") in downloaded and downloaded[v["id"]]]
+        vs = []
+        for v in lang.get("versions", []):
+            vid = str(v.get("id", ""))
+            if not vid or vid.startswith("REPLACE"):
+                continue
+            vs.append({"fileset": vid, "name": v["name"], "available": bool(downloaded.get(vid))})
         if vs:
             c_out["languages"].append({"code": lang["code"], "name": lang["name"], "versions": vs})
     if c_out["languages"]:

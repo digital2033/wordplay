@@ -2,6 +2,26 @@
 
 All notable changes to Wordplay are recorded here. Versions follow the form `major.minor`.
 
+## 1.5.4 - Bible Brain catalogue discovery (in progress)
+
+### Added
+- `discover-bible-brain.yml`: a manual workflow that calls the Bible Brain language, country, Bible and fileset endpoints and saves small samples as an artifact. It does not publish anything.
+
+## 1.5.3 - Chooser always visible, Echo audio
+
+### Added
+- The Country, Language and Version chooser on the home page now appears as soon as the game opens. It lists every version in `bible-catalog.json`, even before the text is published. Versions not yet published are marked "coming soon", and the built-in text is used for them.
+- Echo has an audio version, "Listen, then retell", marked coming soon until audio is connected.
+
+### Changed
+- The build publishes every configured version, marked as available or not, in `text/catalog.json`.
+- `bible-catalog.json` is published with the site (it holds only IDs and names, no secrets).
+
+## 1.5.2 - Answers shown with points
+
+### Added
+- At the end of every game, an Answers list shows each question with the correct answer and a tick or cross for the player's answer. This covers multiple choice, typed answers, Bible Trivia, Bible Characters, Story Builder, Memory Verse, Bible Crossword and Word Search.
+
 ## 1.5.1 - Fixes from a full test run
 
 ### Fixed

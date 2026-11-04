@@ -57,7 +57,7 @@ jobs:
       - name: Prepare the site folder (only public files)
         run: |
           mkdir -p _site/icons
-          cp index.html config.json manifest.webmanifest sw.js _site/
+          cp index.html config.json manifest.webmanifest sw.js bible-catalog.json _site/
           cp icons/*.png _site/icons/
 
       - name: Download licensed audio for offline use (optional)

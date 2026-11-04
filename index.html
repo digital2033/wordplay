@@ -644,6 +644,19 @@ function levelInfo(points){
 }
 function earnedBadges(st){ return BADGES.filter(b => b.test(st)).map(b => b.id); }
 function activePlayer(){ return DB.players[DB.activeId] || null; }
+/* ===== ANSWER REVIEW: shown with the points at the end of each game ===== */
+let REVIEW = [];
+function addReview(q, a, ok){
+  if(!q) return;
+  q = String(q);
+  if(REVIEW.some(r => r.q === q)) return;
+  REVIEW.push({ q, a: String(a), ok: !!ok });
+}
+function reviewHTML(){
+  if(!REVIEW.length) return "";
+  return `<h3>Answers</h3><ol style="padding-left:20px">${REVIEW.map(r =>
+    `<li>${r.ok ? "✓" : "✗"} ${escapeHtml(r.q)}<br><span class="muted">Answer: <strong>${escapeHtml(r.a)}</strong></span></li>`).join("")}</ol>`;
+}
 function stage(){ return document.getElementById("stage"); }
 function audioBlock(url, label){
   return url
@@ -834,6 +847,7 @@ function finishModule(name, head, max, hh){
       <h2>${T("finish")}</h2>
       <p><strong>${T("earned")}: <span class="score">+${points}</span></strong></p>
       <div class="feedback">Attendance +${ATTEND_POINTS} | Head ${head} of ${max} | Heart ${heart ? "+"+HEART_POINTS : "0"} | Hands ${hands ? "+"+HANDS_POINTS : "0"}</div>
+      ${reviewHTML()}
       <p>${li.cur.icon} ${li.cur.name} - ${st.points} ${T("points")}</p>
       <div class="xp"><div style="width:${li.pct}%"></div></div>
       ${newBadges.length ? `<p><strong>${T("unlocked")}</strong></p><div class="badges">${newBadges.map(b=>`<div class="bt"><div class="ico">${b.icon}</div>${b.name}</div>`).join("")}</div>` : ""}
@@ -925,6 +939,7 @@ function runQuestions(qs, onFinish, i=0, score=0){
     b.onclick = () => {
       btns.forEach(x => x.disabled = true);
       const ok = k === q.correct;
+      addReview(q.q, q.options[q.correct], ok);
       b.classList.add(ok ? "correct" : "wrong");
       if(!ok) btns[q.correct].classList.add("correct");
       document.getElementById("fb").innerHTML = `
@@ -1094,6 +1109,7 @@ function renderStory(item){
     </div>`;
   document.getElementById("sb-check").onclick = () => {
     const correctPos = sbOrder.filter((c,pos) => c === pos).length;
+    addReview("Put these events in order", sbCards.join(" then "), correctPos === sbCards.length);
     document.getElementById("sb-res").innerHTML = `
       <div class="feedback"><span class="score">${correctPos} of ${sbCards.length} in place</span><br>
       ${correctPos === sbCards.length ? "Perfect order." : "Some cards are out of place. Try again or continue."}</div>
@@ -1133,6 +1149,7 @@ function runMemory(){
       i.style.color = ok ? "#2e8b57" : "#c0475b";
       if(!ok) i.title = "Expected: " + i.dataset.a;
     });
+    addReview("Fill in the missing words", item.template.replace(/\[\[(.+?)\]\]/g, "$1"), score === inputs.length);
     document.getElementById("mv-res").innerHTML = `
       <div class="feedback"><span class="score">${score} of ${inputs.length}</span><br>
       ${score === inputs.length ? "You remembered the whole verse." : "Words in red are incorrect. Hover over them to see the answer."}</div>
@@ -1425,6 +1442,7 @@ function bqAnswer(k){
   if(c.answered) return;
   c.answered = true;
   const ok = k === c.q.correct;
+  addReview(c.q.q, c.q.options[c.q.correct], ok);
   if(ok) bq.correct++; else bq.lives--;
   document.getElementById("bq-fifty").disabled = true;
   document.getElementById("bq-hint").disabled = true;
@@ -1496,6 +1514,7 @@ function bcRound(){
 function bcDraw(){
   const c = bc.deck[bc.i];
   const done = bc.solved || bc.lives <= 0;
+  if(done) addReview("Who am I? (" + c.ref + ")", c.name, bc.solved);
   const clues = c.clues.slice(0, bc.shown).map(x => `<li>${escapeHtml(x)}</li>`).join("");
   let body;
   if(done){
@@ -1723,6 +1742,7 @@ function runCrossword(){
         if(!inp || inp.value.trim().toUpperCase() !== p.w[k]) all = false;
       }
       if(all) solved++;
+      addReview(p.clue, p.w, all);
     });
     document.getElementById("xw-res").innerHTML = `
       <div class="feedback"><span class="score">${solved} of ${placed.length} words correct</span></div>
@@ -1774,9 +1794,10 @@ function runWordSearch(){
       <div id="ws-res"></div>
       <button id="ws-finish" class="alt">Finish now</button>
     </div>`;
-  const finish = () => withHH("Word Search", found.size, total,
+  const finish = () => { entry.words.forEach(x => { if(ws.placed.some(p => p.w === x.w)) addReview(x.clue, x.w, found.has(x.w)); });
+    return withHH("Word Search", found.size, total,
     "Which word from this search reminded you of a story you know well?",
-    "Tell one person about the Bible story behind one of the words you found.");
+    "Tell one person about the Bible story behind one of the words you found."); };
   document.getElementById("ws-finish").onclick = finish;
   document.getElementById("ws-grid").onclick = e => {
     const cell = e.target.closest("[data-r]");
@@ -1858,6 +1879,7 @@ function typedRun(items, build, answerOf, onFinish, i = 0, score = 0){
     if(btn.disabled) return;
     const v = normAns(input.value);
     const right = v === normAns(answerOf(it)) || (it.accept || []).some(a => normAns(a) === v);
+    addReview(it.q || it.clue || it.quote || "", answerOf(it), right);
     btn.disabled = true;
     input.disabled = true;
     document.getElementById("tx-fb").innerHTML = `
@@ -1995,6 +2017,7 @@ function runStoryText(){
     const typed = document.getElementById("sbt").value.replace(/\D/g, "").split("").map(Number);
     let matches = 0;
     correct.forEach((c, j) => { if(typed[j] === c) matches++; });
+    addReview("Put these events in order", item.cards.join(" then "), matches === correct.length);
     document.getElementById("sbt-res").innerHTML = `
       <div class="feedback"><span class="score">${matches} of ${correct.length} in the right place</span><br>
       The correct order is ${correct.join(" ")}.</div>
@@ -2024,6 +2047,7 @@ function runMemoryText(){
     const typed = words(document.getElementById("mvt").value);
     let matches = 0;
     tw.forEach((w, j) => { if(typed[j] === w) matches++; });
+    addReview("Say the verse from memory", target, matches === tw.length);
     document.getElementById("mvt-res").innerHTML = `
       <div class="feedback"><span class="score">${matches} of ${tw.length} words in the right place</span><br>
       <span class="muted">${escapeHtml(target)}</span></div>
@@ -2073,12 +2097,14 @@ function runCharactersText(){
       const v = normAns(document.getElementById("tc").value);
       if(v === normAns(c.name)){
         points += 6 - shown;
+        addReview("Who am I? (" + c.ref + ")", c.name, true);
         btn.disabled = true;
         document.getElementById("tc-fb").innerHTML = `<div class="feedback"><span class="score">Correct: ${escapeHtml(c.name)}</span> (+${6 - shown} points)<br>${escapeHtml(c.info)}</div><button id="tc-next">Next character</button>`;
       } else {
         lives--;
         btn.disabled = true;
         const out = lives <= 0;
+        if(out) addReview("Who am I? (" + c.ref + ")", c.name, false);
         document.getElementById("tc-fb").innerHTML = out
           ? `<div class="feedback">Out of lives. The answer was <strong>${escapeHtml(c.name)}</strong>.<br>${escapeHtml(c.info)}</div><button id="tc-next">${T("finish")}</button>`
           : `<div class="feedback">Not quite. You lost a life. Reveal another clue, or guess again.</div><button id="tc-again">Guess again</button>`;
@@ -2113,6 +2139,7 @@ function runCrosswordText(){
       const ok = inp.value.trim().toUpperCase() === inp.dataset.w;
       inp.style.color = ok ? "#2e8b57" : "#c0475b";
       if(ok) solved++;
+      addReview((inp.closest("li") || {}).textContent || inp.dataset.w, inp.dataset.w, ok);
     });
     document.getElementById("ctx-res").innerHTML = `
       <div class="feedback"><span class="score">${solved} of ${words.length} correct</span></div>
@@ -2164,7 +2191,8 @@ const GAMES = [
   { id:"echo", title:"Echo", tagline:"Read a passage, then retell it in your own words.",
     about:"Echo builds understanding and memory of Scripture. You read a passage, hide the text, and retell the story from memory. Your retelling is checked for the key parts of the story.",
     how:["Read the passage carefully.","Hide the text when you are ready.","Retell the story in your own words.","Answer the Heart and Hands prompts."],
-    formats:[ {key:"text", label:"Read and retell", tag:"text", run:runEchoText} ] },
+    formats:[ {key:"audio", label:"Listen, then retell", tag:"audio", run:runEchoAudio},
+              {key:"text", label:"Read and retell", tag:"text", run:runEchoText} ] },
   { id:"scene", title:"Scene Detective", tagline:"Watch or read a scene from the Gospels, Acts or Covenant films, then spot the details.",
     about:"Scene Detective trains careful observation. Watch a film clip, or read the story of a scene, then answer questions about who was there, what was said and what happened.",
     how:["Watch the clip, or read the scene.","Answer three observation questions.","Reflect on what the scene shows about Jesus or God.","Take the Hands mission."],
@@ -2223,19 +2251,33 @@ function soonNote(){
 
 function setFilter(f){ gameFilter = f; renderGames(); }
 function loadCatalog(){
+  const norm = c => ({ countries: (c.countries || []).map(co => ({
+    code: co.code, name: co.name,
+    languages: (co.languages || []).map(la => ({
+      code: la.code, name: la.name,
+      versions: (la.versions || []).map(v => {
+        const fileset = v.fileset || v.id;
+        // a version is playable only when its text was published (text/catalog.json marks it available)
+        const available = ("available" in v) ? !!v.available : false;
+        return { fileset, name: v.name, available };
+      }).filter(v => v.fileset)
+    })).filter(la => la.versions.length)
+  })).filter(co => co.languages.length) });
+  // Prefer the published catalogue; otherwise show the configured list (all versions marked coming soon)
   return fetch("text/catalog.json", { cache: "no-cache" })
     .then(r => r.ok ? r.json() : null)
-    .then(c => { if(c && Array.isArray(c.countries)) BIBLE_CATALOG = c; })
+    .then(c => c || fetch("bible-catalog.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null))
+    .then(c => { if(c && Array.isArray(c.countries)) BIBLE_CATALOG = norm(c); })
     .catch(() => {});
 }
 function currentBible(){
   const C = BIBLE_CATALOG.countries;
   const saved = DB.settings.bible || {};
-  if(!C.length) return { country: null, lang: null, fileset: null, name: "King James Version (built-in)" };
+  if(!C.length) return { country: null, lang: null, fileset: null, available: false, name: "King James Version (built-in)" };
   const c = C.find(x => x.code === saved.country) || C[0];
   const l = c.languages.find(x => x.code === saved.lang) || c.languages[0];
   const v = l.versions.find(x => x.fileset === saved.fileset) || l.versions[0];
-  return { country: c.code, lang: l.code, fileset: v.fileset, name: v.name };
+  return { country: c.code, lang: l.code, fileset: v.fileset, available: v.available, name: v.name };
 }
 function setBible(country, lang, fileset){
   DB.settings.bible = { country, lang, fileset };
@@ -2247,18 +2289,20 @@ function renderBiblePicker(){
   if(!el) return;
   const C = BIBLE_CATALOG.countries;
   if(!C.length){
-    el.innerHTML = `<p class="muted">Bible text: King James Version (built-in). More countries, languages and versions appear here once the text has been published.</p>`;
+    el.innerHTML = `<p class="muted">Bible text: King James Version (built-in).</p>`;
     return;
   }
   const cur = currentBible();
-  const c = C.find(x => x.code === cur.country);
-  const l = c.languages.find(x => x.code === cur.lang);
-  const sel = (id, items, val, label) => `
-    <label class="muted" for="${id}" style="display:block;margin-top:8px">${label}</label>
-    <select id="${id}" class="sel">${items.map(([v, t]) => `<option value="${escapeHtml(v)}" ${v === val ? "selected" : ""}>${escapeHtml(t)}</option>`).join("")}</select>`;
-  el.innerHTML = sel("b-country", C.map(x => [x.code, x.name]), cur.country, "Country")
-               + sel("b-lang", c.languages.map(x => [x.code, x.name]), cur.lang, "Language")
-               + sel("b-ver", l.versions.map(x => [x.fileset, x.name]), cur.fileset, "Version");
+  const c = C.find(x => x.code === cur.country) || C[0];
+  const l = c.languages.find(x => x.code === cur.lang) || c.languages[0];
+  const label = v => v.name + (v.available ? "" : " (coming soon)");
+  const sel = (id, items, val, text) => `
+    <label class="muted" for="${id}" style="display:block;margin-top:8px">${text}</label>
+    <select id="${id}" class="sel" style="width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid rgba(127,127,127,.4);background:var(--bg);color:var(--ink)">${items.map(([v, t]) => `<option value="${escapeHtml(v)}" ${v === val ? "selected" : ""}>${escapeHtml(t)}</option>`).join("")}</select>`;
+  el.innerHTML = sel("b-country", C.map(x => [x.code, x.name]), c.code, "Country")
+               + sel("b-lang", c.languages.map(x => [x.code, x.name]), l.code, "Language")
+               + sel("b-ver", l.versions.map(x => [x.fileset, label(x)]), cur.fileset, "Version")
+               + `<p class="muted" style="font-size:.8rem;margin-top:6px">Passages in Echo use this version. Versions marked "coming soon" are not published yet, so the built-in text is used.</p>`;
   document.getElementById("b-country").onchange = e => {
     const nc = C.find(x => x.code === e.target.value);
     setBible(nc.code, nc.languages[0].code, nc.languages[0].versions[0].fileset);
@@ -2370,6 +2414,7 @@ function startModule(book){
   quizIdx = 0;
   window.currentView = "play";
   const g = GAMES[pickingGame];
+  REVIEW.length = 0;
   const f = g.formats.find(x => x.key === pickingFormat && featureOn(x.tag)) || g.formats.find(x => featureOn(x.tag)) || g.formats[0];
   f.run();
   paintHeader();
@@ -2392,7 +2437,7 @@ function parseRef(ref){
 }
 async function fetchPassage(ref){
   const bible = currentBible();
-  if(!bible.fileset) return null;
+  if(!bible.fileset || !bible.available) return null;
   const p = parseRef(ref);
   if(!p) return null;
   const base = (APP_CONFIG.api && APP_CONFIG.api.base) || "";
@@ -2421,6 +2466,17 @@ function runWhoSaidAudio(){
       <button id="wsa-go">Start</button>
     </div>`;
   document.getElementById("wsa-go").onclick = () => runWhoSaid();
+}
+function runEchoAudio(){
+  stage().innerHTML = `
+    <div class="card">
+      <span class="badge b-head">Echo - Audio</span>
+      <h2>Listen to the passage</h2>
+      ${audioBlock(CONFIG.echoAudio, "Echo passage audio")}
+      <p class="muted">Listen to the passage, then hide the audio and retell it in your own words.</p>
+      <button id="ea-go">Retell it</button>
+    </div>`;
+  document.getElementById("ea-go").onclick = () => runEchoText();
 }
 function runMemoryAudio(){
   stage().innerHTML = `
