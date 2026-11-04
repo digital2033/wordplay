@@ -1,0 +1,31 @@
+{
+  "_comment": "The Bible versions players can choose. Country > language > version. Each version's id is its Bible Brain TEXT fileset ID. Set enabled to true to download it at build time (DOWNLOAD_TEXT=true). scope: 'games' downloads only the chapters the games use (game-chapters.json); 'full' downloads the whole Bible. Find IDs in the Bible Brain Postman collection or account.",
+  "countries": [
+    {
+      "code": "US",
+      "name": "United States",
+      "languages": [
+        {
+          "code": "eng",
+          "name": "English",
+          "versions": [
+            { "id": "ENGKJV", "name": "King James Version", "scope": "games", "enabled": false }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "IN",
+      "name": "India",
+      "languages": [
+        {
+          "code": "mal",
+          "name": "Malayalam",
+          "versions": [
+            { "id": "REPLACE_MALAYALAM_TEXT_FILESET", "name": "Malayalam version (name)", "scope": "games", "enabled": false }
+          ]
+        }
+      ]
+    }
+  ]
+}

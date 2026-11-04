@@ -24,6 +24,8 @@ jobs:
         run: |
           python3 -m json.tool config.json > /dev/null
           python3 -m json.tool manifest.webmanifest > /dev/null
+          python3 -m json.tool bible-catalog.json > /dev/null
+          python3 -m json.tool game-chapters.json > /dev/null
           echo "JSON files are valid"
 
       - name: Make sure config.json holds no secrets
@@ -63,6 +65,12 @@ jobs:
         env:
           BIBLE_BRAIN_KEY: ${{ secrets.BIBLE_BRAIN_KEY }}
         run: python3 scripts/fetch_offline_audio.py
+
+      - name: Download Bible text for offline use (optional)
+        if: vars.DOWNLOAD_TEXT == 'true'
+        env:
+          BIBLE_BRAIN_KEY: ${{ secrets.BIBLE_BRAIN_KEY }}
+        run: python3 scripts/fetch_offline_text.py
 
       - uses: actions/configure-pages@v5
 

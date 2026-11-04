@@ -1,98 +1,78 @@
 # Wordplay
 
-Play - Feel - Live. A Scripture Engagement game with Head - Heart - Hands journeys.
-Installable as a Progressive Web App (PWA) on Android, iPhone and desktop, and it works offline for the game shell.
+**Play - Feel - Live.** Wordplay is a Scripture Engagement game. Players read, listen, watch and play their way through the Bible, and each game ends with a Head - Heart - Hands step: understand the passage, reflect on it, then act on it.
 
-## What is in this repository
+Wordplay runs in any modern browser and installs on Android, iPhone and desktop as an app.
 
-| File | Purpose |
-|---|---|
-| `index.html` | The game (all modules, languages, profiles, progress and leaderboard) |
-| `config.json` | Public settings: media proxy address, Bible Brain fileset IDs per language |
-| `manifest.webmanifest` | PWA name, icons and install settings |
-| `sw.js` | Service worker: offline shell and cache versioning |
-| `icons/` | App icons (192 and 512 pixels) |
+## The games
 
-## Security
+Wordplay has ten games. Each game can be filtered by media type.
 
-- **The Bible Brain API key is never stored in this repository.** It lives only on the media proxy server (see the `wordplay-server` repository), in an environment variable.
-- `config.json` holds only the public address of the proxy and the fileset IDs. Do not add keys, passwords or tokens here.
-- `.gitignore` excludes `.env` files.
+| Game | What you do | Media |
+|---|---|---|
+| **Echo** | Read a passage, hide the text, then retell it in your own words | Text |
+| **Scene Detective** | Watch a scene from the Gospel, Acts or Covenant films (or read it), then answer questions about what you saw | Video, Text |
+| **Covenant Quest** | Journey through the 12 clips of *The Covenant* film, from creation to the Promised Land. Each clip has a question, a Heart moment and a Hands mission | Video, Text |
+| **Who Said It** | Identify who spoke each Scripture quotation (listen, type or choose) | Audio, Text |
+| **Story Builder** | Put the events of a Bible story in order (The Good Samaritan) | Text |
+| **Memory Verse** | Learn a verse by listening, filling blanks or typing it from memory | Audio, Text |
+| **Bible Trivia** | Ten random questions on Bible facts, with lives and lifelines | Text |
+| **Bible Characters** | Guess the character from clues. The earlier you guess, the more points | Text |
+| **Bible Crossword** | Solve a crossword of people and places, or type the answers to the clues | Text |
+| **Word Search** | Find words in a letter grid, or unscramble them | Text |
 
-## Run locally
+## Finding a game
 
-Serve the folder with any static server (opening the file directly will not register the service worker):
+The home page shows the games in a 2 x 2 grid. Use the filter buttons to show:
 
-```bash
-npx serve .
-# or
-python3 -m http.server 8000
-```
+- **All:** every game.
+- **Text:** all games with a text format.
+- **Audio:** games with a listening format (Who Said It, Memory Verse).
+- **Video:** games with a film format (Scene Detective, Covenant Quest).
 
-Then open http://localhost:8000
+Tap a game to open its page. The page explains the game and how to play it, and lists the formats. Choose a format, then tap **Start**.
 
-## Publish on GitHub Pages
+## How to play
 
-1. Create a new repository on GitHub, for example `wordplay`. For Pages on a free account it must be public, and this repository should only contain the files listed above.
-2. Push this folder:
-   ```bash
-   git init
-   git add .
-   git commit -m "Wordplay v1"
-   git branch -M main
-   git remote add origin https://github.com/<your-account>/wordplay.git
-   git push -u origin main
-   ```
-3. In the repository, go to **Settings > Pages**, choose **Deploy from a branch**, select `main` and `/ (root)`, and save.
-4. The game will be published at `https://<your-account>.github.io/wordplay/`.
+1. **Sign in.** Enter your name and choose an avatar. Your progress is saved on your device.
+2. **Choose a game.** Use the filter if you want only text, audio or video games.
+3. **Read the game page.** Check how to play and choose a format.
+4. **Choose a book** (for most games). Pick Old or New Testament, then a book. Covenant Quest follows the film, so it skips this step.
+5. **Play.** Answer, retell or find words, following the instructions on the screen.
+6. **Complete the Heart and Hands steps.** Write a short reflection (shared only with your group or mentor), then choose a mission to act on this week.
 
-## Connect to the media proxy
+## Points, levels and badges
 
-1. Deploy the `wordplay-server` on your cPanel Node.js app, for example at `https://api.yourdomain.org`.
-2. In that server's environment variables set `ALLOWED_ORIGINS` to the game address, for example `https://<your-account>.github.io` (no trailing slash, no path).
-3. In `config.json`, set `api.base` to the server address and replace each `REPLACE_..._FILESET` value with the fileset IDs from your Bible Brain account.
-
-## Release checklist
-
-- Bump `CACHE_VERSION` in `sw.js` so installed apps pick up the new version.
-- Test on a real Android phone: install from the browser menu, open offline, play audio.
-- Check the licence terms of Bible Brain and the content providers before publishing audio or video.
+- **Attendance:** 5 points for each game you complete.
+- **Head:** your score in the game (for example, correct answers or words found).
+- **Heart:** 2 points for completing the reflection. The content of your reflection is never scored.
+- **Hands:** 3 points for completing the mission.
+- **Levels:** Seedling, Sprout, Disciple, Steward, Witness and Champion.
+- **Badges:** First Steps, Book Explorer, Old and New Testament Scholar, Faithful Three, Heart Keeper, Hands in Action and Full Set.
+- **History:** My progress shows each game you attended, the book, the date and the points. Text and audio versions are recorded under their own names.
+- **Leaderboard:** ranks the players on your device.
 
 ## Languages
 
-Interface labels are available in English, Hindi, Malayalam, Tamil, Telugu, Kannada, Bengali, Marathi, Gujarati and Punjabi. Game content (questions, passages and clues) is currently in English and needs translation by partners.
+- **Interface:** English, Hindi, Malayalam, Tamil, Telugu, Kannada, Bengali, Marathi, Gujarati and Punjabi. Choose it on your profile.
+- **Bible text:** on the home page, choose the Bible text language. The game uses the built-in King James Version, or pulls the text of a passage from Bible Brain in the language you choose, once it is set up (see DEPLOYMENT.md).
+- **Game content:** questions, clues and summaries are currently in English and need translation by partner teams.
 
-## Automated publishing (GitHub Actions)
+## Coming soon
 
-The workflow in `.github/workflows/deploy-pages.yml` runs on every push to `main`. It:
+Audio and video are coming soon. The games with those formats (Who Said It, Memory Verse, Scene Detective and Covenant Quest) are fully playable in text now. Audio and video formats appear as "Coming soon" until their content is connected.
 
-1. Validates `config.json` and `manifest.webmanifest`, and checks that `config.json` contains no secret-like fields.
-2. Checks the syntax of the game script and the service worker.
-3. Publishes only the public files (`index.html`, `config.json`, `manifest.webmanifest`, `sw.js`, `icons/`) to GitHub Pages.
+## Offline use
 
-**One-time setup:** in the repository go to **Settings > Pages** and set **Source** to **GitHub Actions** (not "Deploy from a branch"). After that, pushing to `main` publishes the game automatically.
+Once installed, the game screens open without an internet connection. Audio and video need an internet connection (or the offline audio option described in DEPLOYMENT.md).
 
-## Offline audio at build time (optional, Option 1)
+## Content and credits
 
-This publishes chapter audio as part of the public GitHub Pages site, so the game can play it without the media proxy server.
+- Bible text in the built-in games is from the King James Version (public domain). Passages pulled from Bible Brain are subject to Bible Brain's terms.
+- *The Covenant* clip structure and summaries come from the film's script and clip guide provided by the project team.
+- Film clips for Scene Detective and Covenant Quest need to be added through the configuration. See DEPLOYMENT.md.
 
-**Only turn this on after confirming that the Bible Brain licence allows public redistribution.** Anyone can download files published this way.
+## More information
 
-1. Add the key as a repository secret: **Settings > Secrets and variables > Actions > New repository secret**, name `BIBLE_BRAIN_KEY`.
-2. Edit `offline-audio.json` and list the chapters to include, using the fileset ID and three-letter book code (for example `LUK` and chapter `15`).
-3. Turn on the download: **Settings > Secrets and variables > Actions > Variables**, add `DOWNLOAD_AUDIO` with the value `true`.
-4. In `config.json`, set `staticAudio.enabled` to `true`.
-5. Push to `main`. The audio is downloaded during the build and published under `media/`.
-
-The build stops if the total size exceeds 800 MB (set by `MAX_MB`), since GitHub Pages sites have a size limit. The key is used only during the build and is never written to the published files.
-
-To return to the server approach, set `DOWNLOAD_AUDIO` to `false` and `staticAudio.enabled` to `false`.
-
-## Audio and text games
-
-On the **Play** page, a switch chooses the game set:
-
-- **Audio games:** the original ten games, with audio and video where content is available (Echo, Scene Detective and Covenant Quest use audio or film clips).
-- **Text games:** a text version of every game. Players read passages and scenes, type their answers, and unscramble or type words instead of tapping options.
-
-Text games are recorded in the history with "(Text)" after the game name, so progress in each set can be seen separately.
+- **DEPLOYMENT.md:** publishing the game, setting up the media server and connecting the Bible Brain API key.
+- **CHANGELOG.md:** what has changed in each version.

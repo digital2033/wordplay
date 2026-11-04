@@ -87,6 +87,23 @@ th,td{padding:8px;border-bottom:1px solid rgba(127,127,127,.2);text-align:left;f
 .seg button{margin:0;border-radius:0;background:transparent;color:var(--accent);padding:8px 16px}
 .seg button.on{background:var(--accent);color:#fff}
 textarea.tx-answers{min-height:44px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.chip{margin:0;padding:8px 14px;border-radius:999px;background:transparent;color:var(--accent);border:1px solid var(--accent);font-size:.92rem}
+.chip.on{background:var(--accent);color:#fff}
+.gcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.gcard{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:var(--card);color:var(--ink);border:1px solid rgba(127,127,127,.2);border-radius:14px;padding:12px;margin:0;box-shadow:0 1px 3px rgba(0,0,0,.08);width:100%;gap:4px;cursor:pointer}
+.gcard .icon{width:100%;margin-bottom:6px}
+.gcard strong{font-size:1rem}
+.gcard .muted{font-size:.8rem;line-height:1.3}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:.68rem;padding:2px 8px;border-radius:999px;color:#fff;text-transform:uppercase;letter-spacing:.04em;display:inline-block}
+.t-text{background:#3b6fb6}
+.t-audio{background:#8a5a9a}
+.t-video{background:#c0475b}
+.soon{grid-column:1/-1;background:var(--card);border-left:4px solid var(--gold);border-radius:10px;padding:12px;font-size:.92rem}
+.chip:disabled{opacity:.6;cursor:not-allowed}
+.chip em{font-style:normal;font-size:.75rem;margin-left:4px}
+.sel{width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid rgba(127,127,127,.4);background:var(--bg);color:var(--ink)}
 </style>
 </head>
 <body>
@@ -300,8 +317,71 @@ const SCENE_OLD = [
 /* Covenant Quest follows The Covenant (Bible Media Group / Lumo Project), an Old Testament film
    covering the Torah, narrated through the eyes of Ezra. Nodes follow the film's story order.
    Film timestamps are to be confirmed against the official chapter list. */
-const COVENANT_NOTE = "Covenant Quest follows The Covenant film (Bible Media Group), covering Genesis to Exodus.";
+const COVENANT_NOTE = "Covenant Quest follows the 12 clips of The Covenant film, from creation (Genesis 1) to the Promised Land and the new covenant (Deuteronomy 34, Jeremiah 31).";
 const COVENANT = [
+  {clip:1, title:"Introduction - Creation, Adam and Eve, and the Fall", ref:"Genesis 1-3",
+   summary:"Introduces Ezra and the reading of God's Law, then moves to Creation, Adam and Eve, the Garden of Eden, humanity's disobedience, and expulsion from Eden.",
+   q:"Where did God place Adam and Eve?", options:["In the garden of Eden","In Babylon","In the land of Canaan","On Mount Sinai"], correct:0, note:"Genesis 2:8.",
+   heart:"Where are you tempted to trust your own judgement over God's word?",
+   mission:"Choose one decision this week and ask God for guidance before you act." },
+  {clip:2, title:"The Flood and God's Call of Abraham", ref:"Genesis 6, 9, 12-16",
+   summary:"Humanity's wickedness leads to the Flood. God establishes His covenant after the Flood, and later calls Abram, promising descendants and blessing. Abram and Sarai attempt to fulfil the promise through Hagar, leading to Ishmael's birth.",
+   q:"What did God promise Abram when he called him?", options:["A great nation and a blessing","A palace in Egypt","A city of gold","Victory in every war"], correct:0, note:"Genesis 12:1-3.",
+   heart:"Where is God asking you to step out in trust, like Abram did?",
+   mission:"Pray about one promise of God that you find hard to believe, and share it with a friend." },
+  {clip:3, title:"God's Covenant with Abraham - Isaac and Ishmael", ref:"Genesis 17, 21",
+   summary:"God renews His covenant with Abraham and promises that Sarah will bear Isaac. Isaac is born, while Hagar and Ishmael are sent away. God protects Ishmael and promises to make him a great nation.",
+   q:"What new name did God give Abram?", options:["Abraham","Israel","Jacob","Moses"], correct:0, note:"Genesis 17:5.",
+   heart:"God cares for those who are sent away, such as Hagar and Ishmael. Who in your life feels unseen?",
+   mission:"Reach out this week to someone who feels left out or unseen." },
+  {clip:4, title:"Abraham's Test - Isaac, Jacob, and the Covenant Line", ref:"Genesis 22, 25, 35",
+   summary:"God tests Abraham by asking him to offer Isaac. God provides a substitute and reaffirms His promises. The covenant line continues through Isaac and Jacob, whose name becomes Israel.",
+   q:"What did God provide in place of Isaac?", options:["A ram caught in a thicket","A lamb from the flock","A dove","A goat from the field"], correct:0, note:"Genesis 22:13.",
+   heart:"What would it cost you to trust God the way Abraham did?",
+   mission:"Offer the thing you hold most tightly to God in prayer this week." },
+  {clip:5, title:"Joseph Betrayed and Taken to Egypt", ref:"Genesis 37, 39",
+   summary:"Joseph's dreams provoke jealousy among his brothers. They sell him into slavery and deceive Jacob. In Egypt, Joseph serves Potiphar but is falsely accused and imprisoned.",
+   q:"For how much silver was Joseph sold?", options:["Twenty shekels","Thirty shekels","A talent of gold","Fifty coins"], correct:0, note:"Genesis 37:28.",
+   heart:"When have you been treated unfairly, and how did you respond?",
+   mission:"Pray for someone who has wronged you, and ask God to help you release the hurt." },
+  {clip:6, title:"Joseph Rises to Power and Saves His Family", ref:"Genesis 41, 45",
+   summary:"Joseph interprets Pharaoh's dreams and rises to authority in Egypt. During famine, his brothers come for food. Joseph eventually reveals himself and recognizes God's purpose in bringing him to Egypt.",
+   q:"What did Joseph tell his brothers when he revealed himself?", options:["I am Joseph, your brother","I am the king of Egypt","I am a prophet of Judah","I am a shepherd from Hebron"], correct:0, note:"Genesis 45:4.",
+   heart:"Can you see how God was at work in a hard season of your own life?",
+   mission:"Write down one way God used a difficult time for good, and share it with someone." },
+  {clip:7, title:"Israel's Slavery and the Call of Moses", ref:"Exodus 1-4",
+   summary:"Israel is enslaved in Egypt. Moses is preserved as a child, grows up in Pharaoh's household, flees Egypt, and later encounters God at the burning bush. God commissions him to deliver Israel.",
+   q:"Where did God speak to Moses at the start of his calling?", options:["From a burning bush","From a cloud over the sea","From the top of a palace","From a well in Midian"], correct:0, note:"Exodus 3:2-4.",
+   heart:"Which of your own excuses has God answered, as he answered Moses?",
+   mission:"Say yes this week to one thing God has been asking you to do." },
+  {clip:8, title:"Pharaoh, the Plagues, and the Passover", ref:"Exodus 4-12",
+   summary:"Moses and Aaron confront Pharaoh. Pharaoh refuses to release Israel, and God brings judgment on Egypt. The Passover is instituted, the firstborn die, and Pharaoh finally releases the Israelites.",
+   q:"What were the Israelites told to put on their door frames?", options:["The blood of the lamb","Oil from the olive","Gold from Egypt","Branches of palm"], correct:0, note:"Exodus 12:7.",
+   heart:"What does the blood of the lamb point to for you as a follower of Jesus?",
+   mission:"Read Exodus 12 with a friend this week and talk about what the Passover means." },
+  {clip:9, title:"The Exodus, the Red Sea, and Bread from Heaven", ref:"Exodus 12, 14, 16",
+   summary:"Israel leaves Egypt and is pursued by Pharaoh's army. God parts the Red Sea and destroys the Egyptian forces. In the wilderness, God provides manna for the people.",
+   q:"What did God provide to feed the people in the wilderness?", options:["Manna from heaven","Quail only","Honey from the rock","Bread baked in Egypt"], correct:0, note:"Exodus 16:14-15.",
+   heart:"When have you depended on God's daily provision?",
+   mission:"Thank God each morning this week for the one thing you need that day." },
+  {clip:10, title:"Mount Sinai - The Covenant, the Law, and the Golden Calf", ref:"Exodus 17, 20, 32-34",
+   summary:"God brings Israel to Mount Sinai and gives the Ten Commandments. While Moses is on the mountain, the people make a golden calf. Moses intercedes, and God renews His covenant with Israel.",
+   q:"What did God give Moses on Mount Sinai?", options:["The Ten Commandments","A new song","A royal crown","A map of Canaan"], correct:0, note:"Exodus 20:1-17.",
+   heart:"What idols compete for your trust, and how can you turn back to God?",
+   mission:"Identify one 'golden calf' in your life this week and bring it honestly to God in prayer." },
+  {clip:11, title:"The Tabernacle, the Promised Land, and Israel's Rebellion", ref:"Exodus 35; Numbers 13-14",
+   summary:"Israel builds the Tabernacle, and God's glory fills it. Later, twelve spies explore Canaan. Most give a fearful report, and Israel refuses to trust God, resulting in forty years of wilderness wandering.",
+   q:"How many spies were sent to explore Canaan?", options:["Twelve","Seven","Forty","Ten"], correct:0, note:"Numbers 13:1-2 - one leader from each tribe.",
+   heart:"Where does fear keep you from trusting God's promises?",
+   mission:"Name one fear this week and speak a promise of God over it each day." },
+  {clip:12, title:"Moses' Final Words - Choose Life and the Promise of a New Covenant", ref:"Deuteronomy 1, 29-34; Jeremiah 31:31-33",
+   summary:"Moses prepares Israel to enter the Promised Land under Joshua, reminds them to love and obey God, and sees the land before his death. The story then looks forward to a coming prophet, the New Covenant, and ultimately the Messiah.",
+   q:"What did Moses urge Israel to do?", options:["Choose life","Return to Egypt","Build a city","Fight the Canaanites first"], correct:0, note:"Deuteronomy 30:19.",
+   heart:"What does it mean for you to choose life today, in your choices and relationships?",
+   mission:"Renew a commitment to God this week, and share it with a family member or friend." }
+];
+const COVENANT_V1 = [
+
   { book:"Genesis", film:"The Garden of Eden", ref:"Genesis 2-3", title:"Adam and Eve",
     q:"What did God forbid Adam and Eve to eat from?",
     options:["The fruit of the tree of knowledge of good and evil","Bread from the field","Fruit from the vine","Honey from the rock"], correct:0,
@@ -477,6 +557,7 @@ function saveDB(){
   try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){}
 }
 let DB = loadDB();
+DB.settings = DB.settings || { bibleLang: "en" };
 let ctx = { book:"Genesis", testament:"OT" };
 let quizTeams = [], quizScores = {}, quizIdx = 0, quizTimer = null, quizRounds = [];
 
@@ -569,7 +650,7 @@ function paintHeader(){
   if(!p){ who.innerHTML = ""; nav.innerHTML = ""; return; }
   const st = statsFor(p.id), li = levelInfo(st.points);
   who.innerHTML = `<span class="avatar-chip">${avatarHTML(p.avatar)}</span><span>${escapeHtml(p.name)}</span><span>${li.cur.icon} ${li.cur.name}</span>`;
-  const items = [["home",T("home")],["play",T("play")],["progress",T("progress")],["board",T("board")],["profile",T("profile")],["logout",T("logout")]];
+  const items = [["home",T("home")],["progress",T("progress")],["board",T("board")],["profile",T("profile")],["logout",T("logout")]];
   nav.innerHTML = items.map(([k,l]) => `<button class="${window.currentView===k?'on':''}" onclick="go('${k}')">${l}</button>`).join("");
 }
 window.currentView = "home";
@@ -641,7 +722,7 @@ document.addEventListener("input", e => { if(e.target && e.target.id === "pf-nam
 /* ============================================================
    HOME
    ============================================================ */
-function showHome(){
+function legacyShowHome(){
   const p = activePlayer();
   if(!p) return showProfile(true);
   const st = statsFor(p.id), li = levelInfo(st.points);
@@ -670,7 +751,7 @@ function showHome(){
 /* ============================================================
    PLAY: module, then testament, then book
    ============================================================ */
-function showPlay(){
+function legacyShowPlay(){
   document.getElementById("stage").innerHTML = `
     <div class="card"><span class="badge b-game">${T("play")}</span><h2>Choose a game</h2>
       <div class="seg"><button class="${gameMode==='audio'?'on':''}" onclick="setMode('audio')">Audio games</button><button class="${gameMode==='text'?'on':''}" onclick="setMode('text')">Text games</button></div>
@@ -685,13 +766,13 @@ function showPlay(){
       </div>`).join("")}`;
   paintHeader();
 }
-let pickingModule = 0, pickingTest = "OT";
-function pickBook(i){
+let pickingModule = 0;
+function legacyPickBook(i){
   if(activeModules()[i].noBook){ pickingModule = i; return startModule("Genesis"); }
   pickingModule = i;
   renderBookPicker();
 }
-function renderBookPicker(){
+function legacyRenderBookPicker(){
   const list = pickingTest === "OT" ? OT_BOOKS : NT_BOOKS;
   document.getElementById("stage").innerHTML = `
     <div class="card">
@@ -704,8 +785,8 @@ function renderBookPicker(){
     </div>`;
   paintHeader();
 }
-function setTest(t){ pickingTest = t; renderBookPicker(); }
-function startModule(book){
+function legacySetTest(t){ pickingTest = t; renderBookPicker(); }
+function legacyStartModule(book){
   ctx = { book, testament: TEST(book) };
   quizIdx = 0;
   window.currentView = "play";
@@ -1467,6 +1548,7 @@ function bcEnd(){
    fileset choices). It is read at start-up; if it cannot be read, the
    game still runs with the placeholders above. */
 let APP_CONFIG = {};
+let BIBLE_CATALOG = { countries: [] };
 async function loadConfig(){
   try{
     const r = await fetch("config.json", { cache: "no-cache" });
@@ -1486,6 +1568,8 @@ async function loadConfig(){
     CONFIG.sceneVideo = url(m.sceneVideo);
     CONFIG.covenantAudio = url(m.covenantAudio);
     CONFIG.quizAudio = url(m.quizAudio);
+    CONFIG.whoSaidAudio = url(m.whoSaidAudio);
+    CONFIG.memoryAudio = url(m.memoryAudio);
   }catch(e){
     APP_CONFIG = {};
   }
@@ -1496,7 +1580,7 @@ if("serviceWorker" in navigator){
   window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
 }
 
-loadConfig().then(() => {
+loadConfig().then(loadCatalog).then(() => {
   /* ===== PUZZLES: Bible Crossword and Word Search ===== */
 const PUZZLE_BANK = [
   { book:"Genesis", title:"People and places of Genesis", words:[
@@ -1788,10 +1872,12 @@ function runEchoText(){
       <h2>Read, then retell</h2>
       ${notice([item])}
       <p class="muted">${item.ref} - ${item.title}</p>
-      <div class="verse" style="font-style:normal">${escapeHtml(text)}</div>
+      <p class="muted" id="echo-src">Text: King James Version (built-in)</p>
+      <div class="verse" id="echo-text" style="font-style:normal">${escapeHtml(text)}</div>
       <p class="muted">Read the passage carefully. When you are ready, hide the text and retell it in your own words.</p>
       <button id="et-hide">Hide the text and retell</button>
     </div>`;
+  fetchPassage(item.ref).then(r => { if(r){ document.getElementById("echo-text").textContent = r.text; document.getElementById("echo-src").textContent = "Text: " + r.name; } });
   document.getElementById("et-hide").onclick = () => {
     stage().innerHTML = `
       <div class="card">
@@ -1848,7 +1934,7 @@ function covTextNode(i, acc){
     <div class="card">
       <span class="badge b-game">Story ${i + 1} of ${COVENANT.length}</span>
       <h3>${n.title} <span class="muted">(${n.ref})</span></h3>
-      <p>${escapeHtml(COVENANT_SUMMARY[n.title] || "")}</p>
+      <p>${escapeHtml(n.summary || "")}</p>
       <button id="ct-q">Answer the question</button>
     </div>`;
   document.getElementById("ct-q").onclick = () =>
@@ -2052,6 +2138,285 @@ const TEXT_MODULES = [
   {title:"Word Unscramble (Text)", badge:"Text - Puzzle", cls:"b-game", desc:"Unscramble Bible words, using the clues. The text version of Word Search.", run:runWordSearchText}
 ];
 let gameMode = "audio";
+
+/* ===== GAME CATALOGUE: 2x2 grid, filters (All / Text / Audio / Video), game pages ===== */
+const TAGLABEL = { text:"Text", audio:"Audio", video:"Video" };
+let gameFilter = "all";
+let pickingGame = 0, pickingFormat = "text";
+
+const GAMES = [
+  { id:"echo", title:"Echo", tagline:"Read a passage, then retell it in your own words.",
+    about:"Echo builds understanding and memory of Scripture. You read a passage, hide the text, and retell the story from memory. Your retelling is checked for the key parts of the story.",
+    how:["Read the passage carefully.","Hide the text when you are ready.","Retell the story in your own words.","Answer the Heart and Hands prompts."],
+    formats:[ {key:"text", label:"Read and retell", tag:"text", run:runEchoText} ] },
+  { id:"scene", title:"Scene Detective", tagline:"Watch or read a scene from the Gospels, Acts or Covenant films, then spot the details.",
+    about:"Scene Detective trains careful observation. Watch a film clip, or read the story of a scene, then answer questions about who was there, what was said and what happened.",
+    how:["Watch the clip, or read the scene.","Answer three observation questions.","Reflect on what the scene shows about Jesus or God.","Take the Hands mission."],
+    formats:[ {key:"video", label:"Watch the film clip", tag:"video", run:runScene},
+              {key:"text", label:"Read the scene", tag:"text", run:runSceneText} ] },
+  { id:"covenant", title:"Covenant Quest", tagline:"Journey through the 12 clips of The Covenant film, from creation to the Promised Land.",
+    about:"Covenant Quest follows the 12 clips of The Covenant film. Each clip has a question, a Heart moment and a Hands mission, so the Old Testament story from creation to Deuteronomy is followed in order.",
+    how:["Start from Clip 1 and move through the clips in order.","Watch or read each clip.","Answer its question.","Reflect, then take the Hands mission before the next clip unlocks."],
+    formats:[ {key:"video", label:"Video journey", tag:"video", run:runCovenant},
+              {key:"text", label:"Read the journey", tag:"text", run:runCovenantText} ], noBook:true },
+  { id:"who", title:"Who Said It", tagline:"Identify who spoke each Scripture quotation.",
+    about:"Who Said It tests your knowledge of Scripture's characters by asking you to identify the speaker of well-known quotations.",
+    how:["Listen to the quotation (audio format), or read it.","Type or choose who spoke it.","Earn points for each correct answer.","Reflect and take the Hands mission."],
+    formats:[ {key:"audio", label:"Listen, then choose", tag:"audio", run:runWhoSaidAudio},
+              {key:"text", label:"Type the speaker", tag:"text", run:runWhoSaidText},
+              {key:"choose", label:"Choose the speaker", tag:"text", run:runWhoSaid} ] },
+  { id:"story", title:"Story Builder", tagline:"Put the events of a Bible story in the right order.",
+    about:"Story Builder helps you follow the sequence of a Bible story, using The Good Samaritan as the example.",
+    how:["Read the events, which are listed in a random order.","Type their correct order, or arrange the cards.","Earn one point for each event in the right place.","Retell the story to someone."],
+    formats:[ {key:"text", label:"Type the order", tag:"text", run:runStoryText},
+              {key:"cards", label:"Arrange the cards", tag:"text", run:runStory} ] },
+  { id:"memory", title:"Memory Verse", tagline:"Learn a verse by listening, then type it from memory.",
+    about:"Memory Verse helps you learn Scripture by heart. Listen to the verse, fill in the blanks, or type the whole verse from memory.",
+    how:["Listen to the verse (audio format), or read it.","Fill in the blanks or type the whole verse.","Earn one point for each word in the right place.","Say the verse aloud to one person this week."],
+    formats:[ {key:"audio", label:"Listen, then type", tag:"audio", run:runMemoryAudio},
+              {key:"text", label:"Type from memory", tag:"text", run:runMemoryText},
+              {key:"blanks", label:"Fill the blanks", tag:"text", run:runMemory} ] },
+  { id:"trivia", title:"Bible Trivia", tagline:"Ten random questions on Bible facts, with lives and lifelines.",
+    about:"Bible Trivia tests your knowledge across the Old and New Testaments. Each quiz has ten random questions, and no question repeats within a quiz.",
+    how:["Answer ten random questions.","Type the answer, or choose from options.","Lose a life for each wrong answer in the multiple-choice format.","Use lifelines (50:50 and Hint) in the multiple-choice format."],
+    formats:[ {key:"text", label:"Type the answer", tag:"text", run:runTriviaText},
+              {key:"choose", label:"Multiple choice", tag:"text", run:runBibleQuiz} ] },
+  { id:"characters", title:"Bible Characters", tagline:"Guess the Bible character from clues. Fewer clues, more points.",
+    about:"Bible Characters reads you the clues to a character one at a time. The earlier you guess correctly, the more points you earn.",
+    how:["Read the first clue.","Guess, or reveal the next clue.","Solving after one clue earns 5 points, after two 4, and so on.","Three lives: a wrong guess costs one life."],
+    formats:[ {key:"text", label:"Type the name", tag:"text", run:runCharactersText},
+              {key:"choose", label:"Choose the name", tag:"text", run:runCharacters} ] },
+  { id:"crossword", title:"Bible Crossword", tagline:"Solve a crossword of Bible people and places.",
+    about:"Bible Crossword uses names and places from each book. Fill in the grid from the clues, or type the answer to each clue without a grid.",
+    how:["Read the across and down clues.","Fill in the words in the grid, or type the answers.","Check your answers.","Read the story of one name from the puzzle this week."],
+    formats:[ {key:"grid", label:"Crossword grid", tag:"text", run:runCrossword},
+              {key:"clues", label:"Type the clues", tag:"text", run:runCrosswordText} ] },
+  { id:"wordsearch", title:"Word Search", tagline:"Find the Bible words in a grid, or unscramble them.",
+    about:"Word Search hides Bible words in a letter grid. Find them by tapping the first and last letters, or unscramble each word with the help of its clue.",
+    how:["Tap the first letter, then the last letter of a word.","Words run across, down or diagonally, and may be backwards.","Or unscramble each word using its clue.","Finish when you have found or unscrambled the words."],
+    formats:[ {key:"grid", label:"Find in the grid", tag:"text", run:runWordSearch},
+              {key:"unscramble", label:"Unscramble", tag:"text", run:runWordSearchText} ] }
+];
+const tagsOf = g => [...new Set(g.formats.map(f => f.tag))];
+function featureOn(tag){ return tag === "text" || ((APP_CONFIG.features || {})[tag] === true); }
+function soonNote(){
+  if(gameFilter === "all" || gameFilter === "text" || featureOn(gameFilter)) return "";
+  const name = gameFilter === "audio" ? "Audio" : "Video";
+  return `<div class="soon"><strong>${name} games: coming soon.</strong> These games are available in text now. ${name} versions will be added when ${name.toLowerCase()} content is connected.</div>`;
+}
+
+function setFilter(f){ gameFilter = f; renderGames(); }
+function loadCatalog(){
+  return fetch("text/catalog.json", { cache: "no-cache" })
+    .then(r => r.ok ? r.json() : null)
+    .then(c => { if(c && Array.isArray(c.countries)) BIBLE_CATALOG = c; })
+    .catch(() => {});
+}
+function currentBible(){
+  const C = BIBLE_CATALOG.countries;
+  const saved = DB.settings.bible || {};
+  if(!C.length) return { country: null, lang: null, fileset: null, name: "King James Version (built-in)" };
+  const c = C.find(x => x.code === saved.country) || C[0];
+  const l = c.languages.find(x => x.code === saved.lang) || c.languages[0];
+  const v = l.versions.find(x => x.fileset === saved.fileset) || l.versions[0];
+  return { country: c.code, lang: l.code, fileset: v.fileset, name: v.name };
+}
+function setBible(country, lang, fileset){
+  DB.settings.bible = { country, lang, fileset };
+  saveDB();
+  renderBiblePicker();
+}
+function renderBiblePicker(){
+  const el = document.getElementById("bible-picker");
+  if(!el) return;
+  const C = BIBLE_CATALOG.countries;
+  if(!C.length){
+    el.innerHTML = `<p class="muted">Bible text: King James Version (built-in). More countries, languages and versions appear here once the text has been published.</p>`;
+    return;
+  }
+  const cur = currentBible();
+  const c = C.find(x => x.code === cur.country);
+  const l = c.languages.find(x => x.code === cur.lang);
+  const sel = (id, items, val, label) => `
+    <label class="muted" for="${id}" style="display:block;margin-top:8px">${label}</label>
+    <select id="${id}" class="sel">${items.map(([v, t]) => `<option value="${escapeHtml(v)}" ${v === val ? "selected" : ""}>${escapeHtml(t)}</option>`).join("")}</select>`;
+  el.innerHTML = sel("b-country", C.map(x => [x.code, x.name]), cur.country, "Country")
+               + sel("b-lang", c.languages.map(x => [x.code, x.name]), cur.lang, "Language")
+               + sel("b-ver", l.versions.map(x => [x.fileset, x.name]), cur.fileset, "Version");
+  document.getElementById("b-country").onchange = e => {
+    const nc = C.find(x => x.code === e.target.value);
+    setBible(nc.code, nc.languages[0].code, nc.languages[0].versions[0].fileset);
+  };
+  document.getElementById("b-lang").onchange = e => {
+    const nl = c.languages.find(x => x.code === e.target.value);
+    setBible(c.code, nl.code, nl.versions[0].fileset);
+  };
+  document.getElementById("b-ver").onchange = e => setBible(c.code, l.code, e.target.value);
+}
+
+function renderGames(){
+  const list = GAMES.map((g, i) => ({ g, i })).filter(({ g }) => gameFilter === "all" || g.formats.some(f => f.tag === gameFilter));
+  document.getElementById("gcards").innerHTML = soonNote() + list.map(({ g, i }) => `
+    <button class="gcard" onclick="openGame(${i})">
+      <div class="icon">${ICONS[i]}</div>
+      <strong>${g.title}</strong>
+      <span class="muted">${g.tagline}</span>
+      <span class="tags">${tagsOf(g).map(t => `<span class="tag t-${t}">${TAGLABEL[t]}</span>`).join("")}</span>
+    </button>`).join("") || `<p class="muted">No games in this category yet.</p>`;
+  document.querySelectorAll(".chip[data-f]").forEach(c => c.classList.toggle("on", c.dataset.f === gameFilter));
+}
+
+function showHome(){ home(); }
+function home(){
+  window.currentView = "home";
+  const p = activePlayer();
+  if(!p) return showProfile(true);
+  const st = statsFor(p.id), li = levelInfo(st.points);
+  stage().innerHTML = `
+    <div class="card">
+      <h2>${p.avatar} ${escapeHtml(p.name)}</h2>
+      <p>${li.cur.icon} <strong>${li.cur.name}</strong> - <span class="score">${st.points}</span> ${T("points")}</p>
+      <div class="xp"><div style="width:${li.pct}%"></div></div>
+      <p class="muted">🔥 ${T("dailyGoal")}</p>
+    </div>
+    <div class="card">
+      <h2>Games</h2>
+      <div class="chips">
+        <button class="chip" data-f="all" onclick="setFilter('all')">All</button>
+        <button class="chip" data-f="text" onclick="setFilter('text')">Text</button>
+        <button class="chip" data-f="audio" onclick="setFilter('audio')">Audio</button>
+        <button class="chip" data-f="video" onclick="setFilter('video')">Video</button>
+      </div>
+      <div id="bible-picker"></div>
+    </div>
+    <div class="gcards" id="gcards"></div>`;
+  renderGames();
+  renderBiblePicker();
+  paintHeader();
+}
+function showPlay(){ home(); }
+
+function openGame(i){
+  pickingGame = i;
+  pickingFormat = (GAMES[i].formats.find(f => featureOn(f.tag)) || GAMES[i].formats[0]).key;
+  renderDetail();
+}
+function renderDetail(){
+  const g = GAMES[pickingGame], i = pickingGame;
+  stage().innerHTML = `
+    <div class="card">
+      <div class="icon">${ICONS[i]}</div>
+      <span class="badge b-game">${g.title}</span>
+      <h2>${g.title}</h2>
+      <p>${escapeHtml(g.about)}</p>
+      <h3>How to play</h3>
+      <ol>${g.how.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ol>
+      <h3>Choose a format</h3>
+      <div class="chips">${g.formats.map(f => `${featureOn(f.tag) ? `<button class="chip ${f.key === pickingFormat ? "on" : ""}" onclick="pickFormat('${f.key}')">${f.label} <span class="tag t-${f.tag}">${TAGLABEL[f.tag]}</span></button>` : `<button class="chip" disabled title="Coming soon">${f.label} <span class="tag t-${f.tag}">${TAGLABEL[f.tag]}</span> <em>Coming soon</em></button>`}`).join("")}</div>
+      <div style="margin-top:12px">
+        <button onclick="playGame()">Start</button>
+        <button class="alt" onclick="go('home')">Back to games</button>
+      </div>
+    </div>`;
+  paintHeader();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function pickFormat(k){
+  const f = GAMES[pickingGame].formats.find(x => x.key === k);
+  if(!f || !featureOn(f.tag)) return toast("Coming soon");
+  pickingFormat = k;
+  renderDetail();
+}
+function playGame(){
+  if(GAMES[pickingGame].noBook) return startModule("Genesis");
+  renderBookPicker();
+}
+let pickingTest = "OT";
+function renderBookPicker(){
+  const g = GAMES[pickingGame];
+  const list = pickingTest === "OT" ? OT_BOOKS : NT_BOOKS;
+  stage().innerHTML = `
+    <div class="card">
+      <span class="badge b-game">${g.title}</span>
+      <h2>${T("chooseBook")}</h2>
+      <div class="chips">
+        <button class="chip ${pickingTest === "OT" ? "on" : ""}" onclick="setTest('OT')">${T("ot")}</button>
+        <button class="chip ${pickingTest === "NT" ? "on" : ""}" onclick="setTest('NT')">${T("nt")}</button>
+      </div>
+      <div class="grid" style="margin-top:10px">${list.map(b => `<button class="tile" onclick="startModule('${b.replace(/'/g, "\\'")}')">${b}</button>`).join("")}</div>
+      <div style="margin-top:12px"><button class="alt" onclick="renderDetail()">${T("back")}</button></div>
+    </div>`;
+  paintHeader();
+}
+function setTest(t){ pickingTest = t; renderBookPicker(); }
+function startModule(book){
+  ctx = { book, testament: TEST(book) };
+  quizIdx = 0;
+  window.currentView = "play";
+  const g = GAMES[pickingGame];
+  const f = g.formats.find(x => x.key === pickingFormat && featureOn(x.tag)) || g.formats.find(x => featureOn(x.tag)) || g.formats[0];
+  f.run();
+  paintHeader();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ----- Bible Brain text: passage references and language ----- */
+const BOOK_CODE_LIST = ["GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI","2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SNG","ISA","JER","LAM","EZK","DAN","HOS","JOL","AMO","OBA","JON","MIC","NAM","HAB","ZEP","HAG","ZEC","MAL","MAT","MRK","LUK","JHN","ACT","ROM","1CO","2CO","GAL","EPH","PHP","COL","1TH","2TH","1TI","2TI","TIT","PHM","HEB","JAS","1PE","2PE","1JN","2JN","3JN","JUD","REV"];
+const BOOK_CODES = {};
+[...OT_BOOKS, ...NT_BOOKS].forEach((name, i) => { BOOK_CODES[name] = BOOK_CODE_LIST[i]; });
+function parseRef(ref){
+  const m = /^(.+?)\s+(\d+)(?::(\d+)(?:-(\d+))?)?$/.exec(String(ref).trim());
+  if(!m) return null;
+  const code = BOOK_CODES[m[1].trim()];
+  if(!code) return null;
+  const ch = +m[2];
+  const from = m[3] ? +m[3] : 1;
+  const to = m[4] ? +m[4] : (m[3] ? from : 999);
+  return { code, ch, from, to };
+}
+async function fetchPassage(ref){
+  const bible = currentBible();
+  if(!bible.fileset) return null;
+  const p = parseRef(ref);
+  if(!p) return null;
+  const base = (APP_CONFIG.api && APP_CONFIG.api.base) || "";
+  const isStatic = !!((APP_CONFIG.staticText || {}).enabled);
+  if(!isStatic && !base) return null;
+  const url = isStatic
+    ? `text/${bible.fileset}/${p.code}/${p.ch}.json`
+    : `${base}/api/text/${bible.fileset}/${p.code}/${p.ch}`;
+  try{
+    const r = await fetch(url);
+    if(!r.ok) return null;
+    const j = await r.json();
+    const verses = (j.verses || []).filter(v => v.verse >= p.from && v.verse <= p.to);
+    return verses.length ? { text: verses.map(v => v.text).join(" "), name: bible.name } : null;
+  }catch(e){ return null; }
+}
+
+/* ----- Audio formats (use Bible Brain audio when configured) ----- */
+function runWhoSaidAudio(){
+  stage().innerHTML = `
+    <div class="card">
+      <span class="badge b-game">Who Said It - Audio</span>
+      <h2>Listen to the quotation</h2>
+      ${audioBlock(CONFIG.whoSaidAudio, "Quotation audio")}
+      <p class="muted">Listen, then identify the speaker.</p>
+      <button id="wsa-go">Start</button>
+    </div>`;
+  document.getElementById("wsa-go").onclick = () => runWhoSaid();
+}
+function runMemoryAudio(){
+  stage().innerHTML = `
+    <div class="card">
+      <span class="badge b-head">Memory Verse - Audio</span>
+      <h2>Listen to the verse</h2>
+      ${audioBlock(CONFIG.memoryAudio, "Memory verse audio")}
+      <p class="muted">Listen two or three times, then type the verse from memory.</p>
+      <button id="mva-go">Start typing</button>
+    </div>`;
+  document.getElementById("mva-go").onclick = () => runMemoryText();
+}
 
 if(activePlayer()){ go("home"); } else { showProfile(true); }
 });

@@ -1,0 +1,19 @@
+{
+  "_comment": "Chapters the games use. Downloaded for every enabled version with scope 'games'.",
+  "items": [
+    { "book": "LUK", "chapter": 15 }, { "book": "LUK", "chapter": 10 }, { "book": "LUK", "chapter": 19 },
+    { "book": "JON", "chapter": 1 }, { "book": "JHN", "chapter": 3 }, { "book": "JHN", "chapter": 6 },
+    { "book": "JHN", "chapter": 10 }, { "book": "JHN", "chapter": 21 }, { "book": "MRK", "chapter": 2 },
+    { "book": "MRK", "chapter": 15 }, { "book": "MAT", "chapter": 2 }, { "book": "MAT", "chapter": 16 },
+    { "book": "ACT", "chapter": 2 }, { "book": "PSA", "chapter": 119 }, { "book": "GEN", "chapter": 1 },
+    { "book": "GEN", "chapter": 2 }, { "book": "GEN", "chapter": 3 }, { "book": "GEN", "chapter": 6 },
+    { "book": "GEN", "chapter": 9 }, { "book": "GEN", "chapter": 12 }, { "book": "GEN", "chapter": 17 },
+    { "book": "GEN", "chapter": 22 }, { "book": "GEN", "chapter": 32 }, { "book": "GEN", "chapter": 37 },
+    { "book": "GEN", "chapter": 39 }, { "book": "GEN", "chapter": 41 }, { "book": "GEN", "chapter": 45 },
+    { "book": "EXO", "chapter": 3 }, { "book": "EXO", "chapter": 12 }, { "book": "EXO", "chapter": 14 },
+    { "book": "EXO", "chapter": 20 }, { "book": "EXO", "chapter": 35 }, { "book": "NUM", "chapter": 13 },
+    { "book": "DEU", "chapter": 30 }, { "book": "EST", "chapter": 4 }, { "book": "RUT", "chapter": 1 },
+    { "book": "DAN", "chapter": 3 }, { "book": "ROM", "chapter": 8 }, { "book": "1CO", "chapter": 13 },
+    { "book": "PHP", "chapter": 4 }
+  ]
+}
