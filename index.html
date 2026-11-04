@@ -71,6 +71,22 @@ th,td{padding:8px;border-bottom:1px solid rgba(127,127,127,.2);text-align:left;f
 .stat b{display:block;font-size:1.4rem;color:var(--accent)}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--gold);color:#222;padding:10px 18px;border-radius:999px;font-weight:700;display:none;box-shadow:0 4px 12px rgba(0,0,0,.25);z-index:10}
 #toast.show{display:block}
+.xw{display:grid;gap:2px;margin:10px 0}
+.xc{position:relative}
+.xc input{width:100%;aspect-ratio:1;text-align:center;text-transform:uppercase;font-weight:700;font-size:clamp(12px,3.6vw,17px);border:1px solid rgba(127,127,127,.5);border-radius:4px;background:var(--card);color:var(--ink);padding:0}
+.xn{position:absolute;top:1px;left:3px;font-size:9px;color:var(--muted);pointer-events:none;z-index:1}
+.clues{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:.88rem}
+.ws{display:grid;gap:2px;margin:10px 0}
+.ws div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:var(--bg);border-radius:4px;font-weight:700;font-size:clamp(11px,3.2vw,15px);cursor:pointer;user-select:none}
+.ws .sel{background:var(--gold);color:#222}
+.ws .found{background:#cfe9da;color:#111}
+.wsw{display:inline-block;margin:2px 6px 2px 0;font-weight:700}
+.wsw.done{text-decoration:line-through;opacity:.5}
+@media (max-width:420px){.clues{grid-template-columns:1fr}}
+.seg{display:inline-flex;border-radius:999px;overflow:hidden;border:1px solid var(--accent);margin:6px 0 10px}
+.seg button{margin:0;border-radius:0;background:transparent;color:var(--accent);padding:8px 16px}
+.seg button.on{background:var(--accent);color:#fff}
+textarea.tx-answers{min-height:44px}
 </style>
 </head>
 <body>
@@ -483,7 +499,7 @@ const BADGES = [
   {id:"streak", icon:"🔥", name:"Faithful Three", desc:"Play on 3 days in a row", test:s=>s.streak>=3},
   {id:"heart", icon:"💗", name:"Heart Keeper", desc:"Write 5 Heart reflections", test:s=>s.heart>=5},
   {id:"hands", icon:"🤝", name:"Hands in Action", desc:"Complete 5 Hands missions", test:s=>s.hands>=5},
-  {id:"full", icon:"🏅", name:"Full Set", desc:"Try all 8 modules", test:s=>s.modules>=8}
+  {id:"full", icon:"🏅", name:"Full Set", desc:"Try all 10 modules", test:s=>s.modules>=10}
 ];
 const AVATARS = ["noah","moses","david","ruth","esther","joseph","daniel","deborah","peter","paul","jonah","elijah"];
 const AVATAR_NAMES = {noah:"Noah", moses:"Moses", david:"David", ruth:"Ruth", esther:"Esther", joseph:"Joseph",
@@ -657,8 +673,9 @@ function showHome(){
 function showPlay(){
   document.getElementById("stage").innerHTML = `
     <div class="card"><span class="badge b-game">${T("play")}</span><h2>Choose a game</h2>
+      <div class="seg"><button class="${gameMode==='audio'?'on':''}" onclick="setMode('audio')">Audio games</button><button class="${gameMode==='text'?'on':''}" onclick="setMode('text')">Text games</button></div>
       <p class="muted">Pick a module first, then the Bible book you want to play from.</p></div>
-    ${MODULES.map((m,i) => `
+    ${activeModules().map((m,i) => `
       <div class="card">
         <div class="icon">${ICONS[i]}</div>
         <span class="badge ${m.cls}">${m.badge}</span>
@@ -670,7 +687,7 @@ function showPlay(){
 }
 let pickingModule = 0, pickingTest = "OT";
 function pickBook(i){
-  if(MODULES[i].noBook){ pickingModule = i; return startModule("Genesis"); }
+  if(activeModules()[i].noBook){ pickingModule = i; return startModule("Genesis"); }
   pickingModule = i;
   renderBookPicker();
 }
@@ -678,7 +695,7 @@ function renderBookPicker(){
   const list = pickingTest === "OT" ? OT_BOOKS : NT_BOOKS;
   document.getElementById("stage").innerHTML = `
     <div class="card">
-      <span class="badge b-game">${MODULES[pickingModule].title}</span>
+      <span class="badge b-game">${activeModules()[pickingModule].title}</span>
       <h2>${T("chooseBook")}</h2>
       <div><button class="${pickingTest==='OT'?'':'alt'}" onclick="setTest('OT')">${T("ot")}</button>
            <button class="${pickingTest==='NT'?'':'alt'}" onclick="setTest('NT')">${T("nt")}</button></div>
@@ -692,7 +709,7 @@ function startModule(book){
   ctx = { book, testament: TEST(book) };
   quizIdx = 0;
   window.currentView = "play";
-  MODULES[pickingModule].run();
+  activeModules()[pickingModule].run();
   paintHeader();
   window.scrollTo({top:0, behavior:"smooth"});
 }
@@ -748,7 +765,7 @@ function showProgress(){
       <div class="stats">
         <div class="stat"><b>${st.games}</b>${T("games")}</div>
         <div class="stat"><b>${st.books}</b>Books</div>
-        <div class="stat"><b>${st.modules}/8</b>Modules</div>
+        <div class="stat"><b>${st.modules}/10</b>Modules</div>
         <div class="stat"><b>${st.streak}</b>${T("streak")}</div>
       </div>
     </div>
@@ -1198,6 +1215,8 @@ const ICONS = [
   `<svg viewBox="0 0 120 80" role="img" aria-label="A quiz card with a question mark"><rect x="14" y="6" width="92" height="68" rx="10" fill="#c8842b"/><text x="60" y="50" font-size="34" font-family="sans-serif" font-weight="700" text-anchor="middle" fill="#fff">?</text><circle cx="30" cy="62" r="4" fill="#fff"/><circle cx="90" cy="62" r="4" fill="#fff"/></svg>`
 ];
 ICONS.push(`<svg viewBox="0 0 120 80" role="img" aria-label="Three figures with a question mark"><circle cx="34" cy="30" r="12" fill="#3b6fb6"/><path d="M14 70 Q34 44 54 70 Z" fill="#3b6fb6"/><circle cx="86" cy="30" r="12" fill="#c0475b"/><path d="M66 70 Q86 44 106 70 Z" fill="#c0475b"/><text x="60" y="36" font-size="22" font-family="sans-serif" font-weight="700" text-anchor="middle" fill="#c8842b">?</text></svg>`);
+ICONS.push(`<svg viewBox="0 0 120 80" role="img" aria-label="Crossword grid"><g fill="#f6f4ef" stroke="#3b6fb6" stroke-width="2"><rect x="10" y="10" width="20" height="20"/><rect x="32" y="10" width="20" height="20"/><rect x="54" y="10" width="20" height="20"/><rect x="10" y="32" width="20" height="20"/><rect x="54" y="32" width="20" height="20"/><rect x="10" y="54" width="20" height="20"/><rect x="32" y="54" width="20" height="20"/><rect x="54" y="54" width="20" height="20"/></g><text x="16" y="25" font-size="10" font-family="sans-serif" font-weight="700" fill="#3b6fb6">1</text><text x="38" y="25" font-size="12" font-family="sans-serif" font-weight="700" fill="#2e6b4f">A</text><text x="60" y="25" font-size="12" font-family="sans-serif" font-weight="700" fill="#c0475b">R</text><text x="38" y="47" font-size="12" font-family="sans-serif" font-weight="700" fill="#c8842b">K</text><rect x="78" y="10" width="34" height="64" rx="4" fill="#c8842b"/><text x="95" y="48" font-size="18" font-family="sans-serif" font-weight="700" text-anchor="middle" fill="#fff">?</text></svg>`);
+ICONS.push(`<svg viewBox="0 0 120 80" role="img" aria-label="Letter grid with a highlighted word"><g font-family="sans-serif" font-size="11" font-weight="700" fill="#2e6b4f"><text x="12" y="22">W</text><text x="30" y="22">O</text><text x="48" y="22">R</text><text x="66" y="22">D</text><text x="12" y="42">S</text><text x="30" y="42">E</text><text x="48" y="42">A</text><text x="66" y="42">R</text><text x="12" y="62">C</text><text x="30" y="62">H</text><text x="48" y="62">Q</text><text x="66" y="62">Z</text></g><rect x="8" y="30" width="78" height="16" rx="8" fill="none" stroke="#c8842b" stroke-width="3"/><rect x="88" y="10" width="26" height="60" rx="6" fill="#3b6fb6"/><text x="101" y="46" font-size="16" font-family="sans-serif" font-weight="700" text-anchor="middle" fill="#fff">A</text></svg>`);
 const MODULES = [
   {title:"Echo", badge:"Head - Echo", cls:"b-head", desc:"Listen to a passage and retell it in your own words.", run:runEcho},
   {title:"Scene Detective", badge:"Head - Observation", cls:"b-head", desc:"Watch a scene and answer questions about what you observed.", run:runScene},
@@ -1206,7 +1225,9 @@ const MODULES = [
   {title:"Story Builder", badge:"Game - for children", cls:"b-game", desc:"Put the cards of a Bible story into the right order.", run:runStory},
   {title:"Memory Verse", badge:"Head - Memory", cls:"b-head", desc:"Fill in the missing words of a memory verse.", run:runMemory},
   {title:"Bible Trivia", badge:"Game", cls:"b-game", desc:"Fun facts and trivia from the Bible: 10 random questions, 3 lives and two lifelines.", run:runBibleQuiz},
-  {title:"Bible Characters", badge:"Game", cls:"b-game", desc:"Guess the Bible character from clues. The fewer clues you use, the more points you earn.", run:runCharacters}
+  {title:"Bible Characters", badge:"Game", cls:"b-game", desc:"Guess the Bible character from clues. The fewer clues you use, the more points you earn.", run:runCharacters},
+  {title:"Bible Crossword", badge:"Puzzle", cls:"b-game", desc:"Fill in a crossword of Bible people and places, using the clues.", run:runCrossword},
+  {title:"Word Search", badge:"Puzzle", cls:"b-game", desc:"Find the Bible words hidden in the letter grid.", run:runWordSearch}
 ];
 
 /* ============================================================
@@ -1453,7 +1474,14 @@ async function loadConfig(){
     APP_CONFIG = await r.json();
     const base = (APP_CONFIG.api && APP_CONFIG.api.base) || "";
     const m = APP_CONFIG.media || {};
-    const url = path => path ? base + path : "";
+    const st = APP_CONFIG.staticAudio || {};
+    const url = path => {
+      if(!path) return "";
+      if(st.enabled && path.startsWith("/api/audio/")){
+        return (st.folder || "media") + "/" + path.slice("/api/audio/".length) + ".mp3";
+      }
+      return base + path;
+    };
     CONFIG.echoAudio = url(m.echo);
     CONFIG.sceneVideo = url(m.sceneVideo);
     CONFIG.covenantAudio = url(m.covenantAudio);
@@ -1469,7 +1497,563 @@ if("serviceWorker" in navigator){
 }
 
 loadConfig().then(() => {
-  if(activePlayer()){ go("home"); } else { showProfile(true); }
+  /* ===== PUZZLES: Bible Crossword and Word Search ===== */
+const PUZZLE_BANK = [
+  { book:"Genesis", title:"People and places of Genesis", words:[
+    {w:"NOAH", clue:"Built the ark"}, {w:"ARK", clue:"Vessel of the great flood"}, {w:"EDEN", clue:"The first garden"},
+    {w:"ADAM", clue:"The first man"}, {w:"EVE", clue:"The first woman"}, {w:"ABRAHAM", clue:"Father of many nations"},
+    {w:"ISAAC", clue:"Son of promise"}, {w:"JACOB", clue:"Wrestled with God at Peniel"}, {w:"JOSEPH", clue:"Sold into Egypt by his brothers"},
+    {w:"SARAH", clue:"Abraham's wife"}, {w:"CAIN", clue:"Killed his brother Abel"}, {w:"ABEL", clue:"A keeper of sheep"} ]},
+  { book:"Exodus", title:"People and places of Exodus", words:[
+    {w:"MOSES", clue:"Led Israel out of Egypt"}, {w:"AARON", clue:"Moses' brother and first high priest"}, {w:"MIRIAM", clue:"Moses' sister and a prophetess"},
+    {w:"PHARAOH", clue:"King of Egypt"}, {w:"SINAI", clue:"The mountain of the law"}, {w:"MANNA", clue:"Bread from heaven"},
+    {w:"STAFF", clue:"Moses' rod"}, {w:"TABLETS", clue:"Stone with the law written on them"}, {w:"TABERNACLE", clue:"The portable sanctuary"},
+    {w:"EXODUS", clue:"The departure from Egypt"} ]},
+  { book:"Matthew", title:"People and places of Matthew", words:[
+    {w:"BETHLEHEM", clue:"Town of Jesus' birth"}, {w:"NAZARETH", clue:"Jesus' home town"}, {w:"GALILEE", clue:"Region of Jesus' ministry"},
+    {w:"PETER", clue:"Fisherman and apostle"}, {w:"ANDREW", clue:"Peter's brother"}, {w:"JUDAS", clue:"Betrayed Jesus"},
+    {w:"MATTHEW", clue:"Former tax collector and writer of this Gospel"}, {w:"SERMON", clue:"Jesus taught it on the mount"},
+    {w:"BAPTISM", clue:"John baptised Jesus"}, {w:"DISCIPLE", clue:"A follower of Jesus"} ]}
+];
+
+function inGrid(r, c, n){ return r >= 0 && c >= 0 && r < n && c < n; }
+
+/* Places words so they cross each other. d = 0 across, 1 down. */
+function buildCrossword(list){
+  const N = 24;
+  const g = Array.from({length:N}, () => Array(N).fill(""));
+  const words = [...list].sort((a,b) => b.w.length - a.w.length);
+  const placed = [];
+  const put = (it, r, c, d) => {
+    for(let k = 0; k < it.w.length; k++){ g[r + (d ? k : 0)][c + (d ? 0 : k)] = it.w[k]; }
+  };
+  const fits = (w, r, c, d) => {
+    const dr = d ? 1 : 0, dc = d ? 0 : 1, pr = d ? 0 : 1, pc = d ? 1 : 0;
+    const br = r - dr, bc = c - dc, ar = r + dr * w.length, ac = c + dc * w.length;
+    if(inGrid(br, bc, N) && g[br][bc]) return false;
+    if(inGrid(ar, ac, N) && g[ar][ac]) return false;
+    let crosses = 0;
+    for(let k = 0; k < w.length; k++){
+      const rr = r + dr * k, cc = c + dc * k;
+      if(!inGrid(rr, cc, N)) return false;
+      const cur = g[rr][cc];
+      if(cur){ if(cur !== w[k]) return false; crosses++; continue; }
+      if(inGrid(rr + pr, cc + pc, N) && g[rr + pr][cc + pc]) return false;
+      if(inGrid(rr - pr, cc - pc, N) && g[rr - pr][cc - pc]) return false;
+    }
+    return crosses > 0;
+  };
+  if(!words.length) return { placed };
+  const first = words.shift();
+  const r0 = Math.floor(N / 2), c0 = Math.floor((N - first.w.length) / 2);
+  put(first, r0, c0, 0);
+  placed.push({ ...first, r: r0, c: c0, d: 0 });
+  for(const it of words){
+    let ok = false;
+    for(const p of placed){
+      if(ok) break;
+      for(let j = 0; j < p.w.length && !ok; j++){
+        const pr0 = p.d ? p.r + j : p.r, pc0 = p.d ? p.c : p.c + j;
+        for(let i = 0; i < it.w.length && !ok; i++){
+          if(it.w[i] !== p.w[j]) continue;
+          const d = 1 - p.d;
+          const r = d ? pr0 - i : pr0, c = d ? pc0 : pc0 - i;
+          if(fits(it.w, r, c, d)){ put(it, r, c, d); placed.push({ ...it, r, c, d }); ok = true; }
+        }
+      }
+    }
+  }
+  return { placed };
+}
+
+function runCrossword(){
+  const entry = pool(PUZZLE_BANK, 1)[0];
+  const xw = buildCrossword(entry.words.slice(0, 10));
+  const placed = xw.placed;
+  const cellsAbs = {};
+  placed.forEach(p => { for(let k = 0; k < p.w.length; k++){
+    cellsAbs[(p.r + (p.d ? k : 0)) + "," + (p.c + (p.d ? 0 : k))] = p.w[k];
+  } });
+  const keys = Object.keys(cellsAbs).map(k => k.split(",").map(Number));
+  const minR = Math.min(...keys.map(x => x[0])), maxR = Math.max(...keys.map(x => x[0]));
+  const minC = Math.min(...keys.map(x => x[1])), maxC = Math.max(...keys.map(x => x[1]));
+  const W = maxC - minC + 1, H = maxR - minR + 1;
+  const starts = {};
+  [...new Set(placed.map(p => p.r + "," + p.c))]
+    .map(s => s.split(",").map(Number))
+    .sort((a,b) => a[0] - b[0] || a[1] - b[1])
+    .forEach((s, i) => { starts[s[0] + "," + s[1]] = i + 1; });
+  const byNumber = (a, b) => starts[a.r + "," + a.c] - starts[b.r + "," + b.c];
+  const across = placed.filter(p => !p.d).sort(byNumber);
+  const down = placed.filter(p => p.d).sort(byNumber);
+  let grid = "";
+  for(let r = minR; r <= maxR; r++){
+    for(let c = minC; c <= maxC; c++){
+      const key = r + "," + c, L = cellsAbs[key];
+      if(!L){ grid += "<div></div>"; continue; }
+      const n = starts[key];
+      grid += `<div class="xc">${n ? `<span class="xn">${n}</span>` : ""}<input maxlength="1" data-key="${key}" data-a="${L}" autocomplete="off"></div>`;
+    }
+  }
+  const clue = p => `<li><strong>${starts[p.r + "," + p.c]}.</strong> ${escapeHtml(p.clue)} (${p.w.length})</li>`;
+  stage().innerHTML = `
+    <div class="card">
+      <span class="badge b-head">Head - Crossword</span>
+      <h2>${entry.title}</h2>
+      ${notice([entry])}
+      <div class="xw" style="grid-template-columns:repeat(${W},minmax(0,1fr))">${grid}</div>
+      <div class="clues">
+        <div><strong>Across</strong><ol style="padding-left:18px">${across.map(clue).join("")}</ol></div>
+        <div><strong>Down</strong><ol style="padding-left:18px">${down.map(clue).join("")}</ol></div>
+      </div>
+      <button id="xw-check">Check answers</button>
+      <div id="xw-res"></div>
+    </div>`;
+  document.getElementById("xw-check").onclick = () => {
+    let solved = 0;
+    document.querySelectorAll(".xc input").forEach(inp => {
+      const ok = inp.value.trim().toUpperCase() === inp.dataset.a;
+      inp.style.color = ok ? "#2e8b57" : "#c0475b";
+    });
+    placed.forEach(p => {
+      let all = true;
+      for(let k = 0; k < p.w.length; k++){
+        const key = (p.r + (p.d ? k : 0)) + "," + (p.c + (p.d ? 0 : k));
+        const inp = document.querySelector(`.xc input[data-key="${key}"]`);
+        if(!inp || inp.value.trim().toUpperCase() !== p.w[k]) all = false;
+      }
+      if(all) solved++;
+    });
+    document.getElementById("xw-res").innerHTML = `
+      <div class="feedback"><span class="score">${solved} of ${placed.length} words correct</span></div>
+      <button id="xw-next">Continue to Heart and Hands</button>`;
+    document.getElementById("xw-next").onclick = () => withHH("Bible Crossword", solved, placed.length,
+      "Which person or place from this crossword would you like to read about more?",
+      "Read the story of one name from this crossword in your Bible or audio Bible this week.");
+  };
+}
+
+function buildWordSearch(words, size){
+  const g = Array.from({length:size}, () => Array(size).fill(""));
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+  const placed = [];
+  for(const w of words){
+    for(let t = 0, ok = false; t < 400 && !ok; t++){
+      const [dr, dc] = dirs[Math.floor(Math.random() * dirs.length)];
+      const r = Math.floor(Math.random() * size), c = Math.floor(Math.random() * size);
+      if(!inGrid(r, c, size) || !inGrid(r + dr * (w.length - 1), c + dc * (w.length - 1), size)) continue;
+      let good = true;
+      for(let k = 0; k < w.length && good; k++){ const cur = g[r + dr * k][c + dc * k]; if(cur && cur !== w[k]) good = false; }
+      if(!good) continue;
+      for(let k = 0; k < w.length; k++) g[r + dr * k][c + dc * k] = w[k];
+      placed.push({ w, r, c, dr, dc });
+      ok = true;
+    }
+  }
+  const L = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  for(let r = 0; r < size; r++) for(let c = 0; c < size; c++) if(!g[r][c]) g[r][c] = L[Math.floor(Math.random() * 26)];
+  return { grid: g, placed, size };
+}
+
+function runWordSearch(){
+  const entry = pool(PUZZLE_BANK, 1)[0];
+  const ws = buildWordSearch(entry.words.slice(0, 8).map(x => x.w), 12);
+  const total = ws.placed.length;
+  const found = new Set();
+  let sel = null;
+  stage().innerHTML = `
+    <div class="card">
+      <span class="badge b-head">Head - Word Search</span>
+      <h2>${entry.title}</h2>
+      ${notice([entry])}
+      <p class="muted">Tap the first letter, then the last letter of a word. Words run across, down or diagonally, and may be backwards.</p>
+      <div class="ws" id="ws-grid" style="grid-template-columns:repeat(${ws.size},minmax(0,1fr))">
+        ${ws.grid.map((row, r) => row.map((l, c) => `<div data-r="${r}" data-c="${c}">${l}</div>`).join("")).join("")}
+      </div>
+      <p><strong>Find:</strong> ${ws.placed.map(p => `<span class="wsw" data-w="${p.w}">${p.w}</span>`).join("")}</p>
+      <div id="ws-res"></div>
+      <button id="ws-finish" class="alt">Finish now</button>
+    </div>`;
+  const finish = () => withHH("Word Search", found.size, total,
+    "Which word from this search reminded you of a story you know well?",
+    "Tell one person about the Bible story behind one of the words you found.");
+  document.getElementById("ws-finish").onclick = finish;
+  document.getElementById("ws-grid").onclick = e => {
+    const cell = e.target.closest("[data-r]");
+    if(!cell) return;
+    const r = +cell.dataset.r, c = +cell.dataset.c;
+    if(!sel){ sel = { r, c }; cell.classList.add("sel"); return; }
+    const a = sel;
+    sel = null;
+    document.querySelectorAll("#ws-grid .sel").forEach(x => x.classList.remove("sel"));
+    const len = Math.max(Math.abs(r - a.r), Math.abs(c - a.c)) + 1;
+    const straight = a.r === r || a.c === c || Math.abs(r - a.r) === Math.abs(c - a.c);
+    if(len < 2 || !straight){ toast("Select cells in a straight line"); return; }
+    const dr = Math.sign(r - a.r), dc = Math.sign(c - a.c);
+    const cells = [];
+    let s = "";
+    for(let k = 0; k < len; k++){
+      const rr = a.r + dr * k, cc = a.c + dc * k;
+      cells.push([rr, cc]);
+      s += ws.grid[rr][cc];
+    }
+    const rev = s.split("").reverse().join("");
+    const hit = ws.placed.find(p => !found.has(p.w) && (s === p.w || rev === p.w));
+    if(!hit){ toast("Not a word in the list"); return; }
+    found.add(hit.w);
+    cells.forEach(([rr, cc]) => document.querySelector(`#ws-grid [data-r="${rr}"][data-c="${cc}"]`).classList.add("found"));
+    document.querySelector(`.wsw[data-w="${hit.w}"]`).classList.add("done");
+    if(found.size === total){
+      document.getElementById("ws-res").innerHTML = `
+        <div class="feedback"><span class="score">All ${total} words found</span></div>
+        <button id="ws-next">Continue to Heart and Hands</button>`;
+      document.getElementById("ws-next").onclick = finish;
+    }
+  };
+}
+
+/* ===== TEXT GAMES: text variants of every game ===== */
+function setMode(m){ gameMode = m; showPlay(); }
+function activeModules(){ return gameMode === "text" ? TEXT_MODULES : MODULES; }
+const normAns = v => String(v || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim().replace(/^the /, "");
+
+const ECHO_TEXT = {
+  Luke: "And he said, A certain man had two sons: And the younger of them said to his father, Father, give me the portion of goods that falleth to me. And he divided unto them his living. And not many days after the younger son gathered all together, and took his journey into a far country, and there wasted his substance with riotous living. And when he had spent all, there arose a mighty famine in that land; and he began to be in want. And he went and joined himself to a citizen of that country; and he sent him into his fields to feed swine. And he would fain have filled his belly with the husks that the swine did eat: and no man gave unto him. And when he came to himself, he said, How many hired servants of my father's have bread enough and to spare, and I perish with hunger! I will arise and go to my father, and will say unto him, Father, I have sinned against heaven, and in thy sight, And am no more worthy to be called thy son: make me as one of thy hired servants. And he arose, and came to his father. But when he was yet a great way off, his father saw him, and had compassion, and ran, and fell on his neck, and kissed him.",
+  Jonah: "Now the word of the LORD came unto Jonah the son of Amittai, saying, Arise, go to Nineveh, that great city, and cry against it; for their wickedness is come up before me. But Jonah rose up to flee unto Tarshish from the presence of the LORD, and went down to Joppa; and he found a ship going to Tarshish: so he paid the fare thereof, and went down into it, to go with them unto Tarshish from the presence of the LORD."
+};
+const SCENE_NARR = {
+  "A paralysed man brought to Jesus": "Jesus was preaching in a house so crowded that no one could reach the door. Four friends carried a paralysed man to the house, but could not get in. They lifted him onto the roof, made an opening, and lowered him down before Jesus.",
+  "The Good Samaritan": "A traveller was attacked on the road to Jericho, robbed and left half dead. A priest and a Levite saw him and passed by on the other side. A Samaritan, whom many despised, stopped, bandaged his wounds, took him to an inn and paid for his care.",
+  "Pentecost": "The believers were gathered together in one place. Suddenly there came a sound from heaven like a rushing mighty wind, and it filled the whole house. Tongues as of fire appeared and rested on each one of them, and they were all filled with the Holy Spirit.",
+  "Noah sends out the birds": "After the flood, the waters slowly went down. Noah sent out a raven, which kept going back and forth. He then sent out a dove, which returned because it found no place to rest. Later the dove came back with a fresh olive leaf. After the flood, God set a rainbow in the sky as the sign of his covenant."
+};
+const COVENANT_SUMMARY = {
+  "Adam and Eve": "God placed the first humans in a garden and gave them one command. They listened to the serpent instead, and their relationship with God was broken.",
+  "Cain and Abel": "Abel brought an offering from his flock, and Cain brought some of the produce of the ground. God accepted Abel's offering, and Cain grew angry. Later, Cain killed his brother.",
+  "Noah and the ark": "God told Noah to build an ark because the earth was filled with violence. Noah obeyed, and his family and the animals were saved from the flood. God then made a covenant with Noah.",
+  "Abraham's call": "God called Abraham to leave his home and promised him a great nation and a blessing for all the families of the earth. Abraham trusted God and set out.",
+  "Isaac and Rebekah": "Abraham sent a servant to find a wife for his son Isaac. God guided the servant to Rebekah, who gave water to him and to his camels. She became Isaac's wife.",
+  "Joseph forgives his brothers": "Joseph's brothers had sold him into slavery. Years later, in Egypt, Joseph held power over them. When they came for food, he revealed who he was and chose to forgive them.",
+  "Moses and the burning bush": "While tending sheep near Horeb, Moses saw a bush that burned without being consumed. God called to him from the bush and sent him to lead the people out of Egypt.",
+  "Miriam and Aaron": "When Pharaoh ordered baby boys to be killed, Moses' mother hid him in a basket on the river. His sister Miriam watched from a distance to see what would happen to him. Later, Aaron was chosen to speak for Moses.",
+  "The Tabernacle": "After the law was given at Sinai, God asked the people to build a sanctuary so that he could live among them. They brought offerings, and the Tabernacle was built according to God's instructions."
+};
+
+/* Typed-answer runner: one question at a time */
+function typedRun(items, build, answerOf, onFinish, i = 0, score = 0){
+  if(i >= items.length) return onFinish(score, items.length);
+  const it = items[i];
+  stage().innerHTML = `
+    <div class="card">
+      <p class="muted">Question ${i + 1} of ${items.length}</p>
+      ${build(it)}
+      <input type="text" id="tx" autocomplete="off" placeholder="Type your answer">
+      <div style="margin-top:8px"><button id="tx-go">Check</button></div>
+      <div id="tx-fb"></div>
+    </div>`;
+  const input = document.getElementById("tx");
+  input.focus();
+  const go = () => {
+    const btn = document.getElementById("tx-go");
+    if(btn.disabled) return;
+    const v = normAns(input.value);
+    const right = v === normAns(answerOf(it)) || (it.accept || []).some(a => normAns(a) === v);
+    btn.disabled = true;
+    input.disabled = true;
+    document.getElementById("tx-fb").innerHTML = `
+      <div class="feedback">${right ? "Correct." : `Not quite. The answer was: <strong>${escapeHtml(answerOf(it))}</strong>.`} ${escapeHtml(it.info || "")}</div>
+      <button id="tx-next">${i + 1 < items.length ? "Next question" : "See result"}</button>`;
+    document.getElementById("tx-next").onclick = () => typedRun(items, build, answerOf, onFinish, i + 1, score + (right ? 1 : 0));
+  };
+  document.getElementById("tx-go").onclick = go;
+  input.addEventListener("keydown", e => { if(e.key === "Enter") go(); });
+}
+function textIntro(name, body, onStart){
+  stage().innerHTML = `<div class="card"><span class="badge b-game">${name}</span>${notice([])}${body}<button id="ti-go">Start</button></div>`;
+  document.getElementById("ti-go").onclick = onStart;
+}
+function deckForTrivia(){
+  const same = shuffleArr(BIBLE_QUIZ.filter(q => TEST(q.book) === ctx.testament));
+  const other = shuffleArr(BIBLE_QUIZ.filter(q => TEST(q.book) !== ctx.testament));
+  return [...same, ...other].slice(0, QUIZ_LENGTH);
+}
+
+/* 1. Echo (Text): read, hide, retell */
+function runEchoText(){
+  const item = pool(ECHO, 1)[0];
+  const text = ECHO_TEXT[item.book] || "";
+  stage().innerHTML = `
+    <div class="card">
+      <span class="badge b-head">Head - Echo (Text)</span>
+      <h2>Read, then retell</h2>
+      ${notice([item])}
+      <p class="muted">${item.ref} - ${item.title}</p>
+      <div class="verse" style="font-style:normal">${escapeHtml(text)}</div>
+      <p class="muted">Read the passage carefully. When you are ready, hide the text and retell it in your own words.</p>
+      <button id="et-hide">Hide the text and retell</button>
+    </div>`;
+  document.getElementById("et-hide").onclick = () => {
+    stage().innerHTML = `
+      <div class="card">
+        <span class="badge b-head">Head - Echo (Text)</span>
+        <h2>Retell from memory</h2>
+        <textarea id="ans" rows="6"></textarea>
+        <div style="margin-top:8px"><button id="check">Check my retelling</button></div>
+        <div id="res"></div>
+      </div>`;
+    document.getElementById("check").onclick = () => {
+      const txt = document.getElementById("ans").value.toLowerCase();
+      if(!txt.trim()) return;
+      const found = item.elements.filter(e => e.keys.some(k => txt.includes(k)));
+      const missed = item.elements.filter(e => !found.includes(e));
+      document.getElementById("res").innerHTML = `
+        <div class="feedback"><span class="score">${found.length} of ${item.elements.length}</span><br>
+        ${missed.length ? "To revisit: " + missed.map(m => m.label.toLowerCase()).join("; ") + "." : "Every key element was retold."}</div>
+        <button id="et-next">Continue to Heart and Hands</button>`;
+      document.getElementById("et-next").onclick = () =>
+        withHH("Echo (Text)", found.length, item.elements.length, item.heart, item.mission);
+    };
+  };
+}
+
+/* 2. Scene Detective (Text): read the scene, then answer from memory */
+function runSceneText(){
+  const item = SCENE[Math.floor(Math.random() * SCENE.length)];
+  stage().innerHTML = `
+    <div class="card">
+      <span class="badge b-head">Head - Scene Detective (Text)</span>
+      <h2>${item.title}</h2>
+      ${notice([item])}
+      <p class="muted">${item.ref}</p>
+      <p>${escapeHtml(SCENE_NARR[item.title] || "")}</p>
+      <button id="st-go">Hide the text and answer</button>
+    </div>`;
+  document.getElementById("st-go").onclick = () =>
+    runQuestions(item.questions, (score, max) => withHH("Scene Detective (Text)", score, max, item.heart, item.mission));
+}
+
+/* 3. Covenant Quest (Text): read each story, then answer and reflect */
+function runCovenantText(){
+  textIntro("Covenant Quest (Text)",
+    `<h2>Read the stories of The Covenant film</h2><p class="muted">${COVENANT_NOTE}</p>
+     <p>Each story has a short text, a question and a Heart and Hands moment.</p>`,
+    () => covTextNode(0, { score: 0, max: 0, heart: [], hands: false }));
+}
+function covTextNode(i, acc){
+  if(i >= COVENANT.length){
+    return finishModule("Covenant Quest (Text)", acc.score, acc.max, { heart: acc.heart.filter(Boolean).join(" | "), hands: acc.hands });
+  }
+  const n = COVENANT[i];
+  stage().innerHTML = `
+    <div class="card">
+      <span class="badge b-game">Story ${i + 1} of ${COVENANT.length}</span>
+      <h3>${n.title} <span class="muted">(${n.ref})</span></h3>
+      <p>${escapeHtml(COVENANT_SUMMARY[n.title] || "")}</p>
+      <button id="ct-q">Answer the question</button>
+    </div>`;
+  document.getElementById("ct-q").onclick = () =>
+    runQuestions([{ q: n.q, options: n.options, correct: n.correct, note: n.note }], score => {
+      stage().innerHTML = hhCard(n.heart, n.mission);
+      document.getElementById("cont").onclick = () => {
+        const r = readHH();
+        acc.score += score; acc.max += 1;
+        acc.heart.push(r.heart); acc.hands = acc.hands || r.hands;
+        covTextNode(i + 1, acc);
+      };
+    });
+}
+
+/* 4. Who Said It (Text): type the speaker */
+function runWhoSaidText(){
+  const items = pool(WHO_SAID, 4).map(x => ({ q: `Who said: "${x.quote}"?`, answer: x.options[x.correct], info: x.note }));
+  textIntro("Who Said It (Text)", `<h2>Type the speaker</h2><p>${items.length} quotations from Scripture. Type the name or title of the speaker.</p>`, () =>
+    typedRun(items, it => `<h3>${escapeHtml(it.q)}</h3>`, it => it.answer, (score, max) =>
+      withHH("Who Said It (Text)", score, max,
+        "If you had been in one of these scenes, what would you have said or done?",
+        "Speak one honest prayer aloud with a friend or family member this week.")));
+}
+
+/* 5. Story Builder (Text): type the order of the events */
+function runStoryText(){
+  const item = pool(STORY, 1)[0];
+  const order = shuffleArr(item.cards.map((_, i) => i));
+  const correct = item.cards.map((_, ci) => order.indexOf(ci) + 1);
+  stage().innerHTML = `
+    <div class="card">
+      <span class="badge b-game">Story Builder (Text)</span>
+      <h2>${item.title} (${item.ref})</h2>
+      ${notice([item])}
+      <p class="muted">These events are listed in a random order, with numbers. Type the numbers in the order the events happened, for example 3 1 4 2.</p>
+      <ol>${order.map(ci => `<li>${escapeHtml(item.cards[ci])}</li>`).join("")}</ol>
+      <input type="text" id="sbt" autocomplete="off" placeholder="For example: 3 1 4 2">
+      <div style="margin-top:8px"><button id="sbt-go">Check order</button></div>
+      <div id="sbt-res"></div>
+    </div>`;
+  document.getElementById("sbt-go").onclick = () => {
+    const typed = document.getElementById("sbt").value.replace(/\D/g, "").split("").map(Number);
+    let matches = 0;
+    correct.forEach((c, j) => { if(typed[j] === c) matches++; });
+    document.getElementById("sbt-res").innerHTML = `
+      <div class="feedback"><span class="score">${matches} of ${correct.length} in the right place</span><br>
+      The correct order is ${correct.join(" ")}.</div>
+      <button id="sbt-next">Continue to Heart and Hands</button>`;
+    document.getElementById("sbt-next").onclick = () =>
+      withHH("Story Builder (Text)", matches, correct.length, item.heart, item.mission);
+  };
+}
+
+/* 6. Memory Verse (Text): type the whole verse */
+function runMemoryText(){
+  const item = pool(MEMORY, 1)[0];
+  const target = item.template.replace(/\[\[(.+?)\]\]/g, "$1");
+  const words = s => s.toLowerCase().split(/\s+/).map(w => w.replace(/[^a-z]/g, "")).filter(Boolean);
+  const tw = words(target);
+  stage().innerHTML = `
+    <div class="card">
+      <span class="badge b-head">Head - Memory Verse (Text)</span>
+      <h2>${item.ref} (KJV)</h2>
+      ${notice([item])}
+      <p class="muted">Type the whole verse from memory. Punctuation and capital letters are ignored.</p>
+      <textarea id="mvt" rows="4"></textarea>
+      <div style="margin-top:8px"><button id="mvt-go">Check my verse</button></div>
+      <div id="mvt-res"></div>
+    </div>`;
+  document.getElementById("mvt-go").onclick = () => {
+    const typed = words(document.getElementById("mvt").value);
+    let matches = 0;
+    tw.forEach((w, j) => { if(typed[j] === w) matches++; });
+    document.getElementById("mvt-res").innerHTML = `
+      <div class="feedback"><span class="score">${matches} of ${tw.length} words in the right place</span><br>
+      <span class="muted">${escapeHtml(target)}</span></div>
+      <button id="mvt-next">Continue to Heart and Hands</button>`;
+    document.getElementById("mvt-next").onclick = () => withHH("Memory Verse (Text)", matches, tw.length,
+      "Which word in this verse speaks to you most today, and why?",
+      "Say this verse aloud to one person this week and invite them to share a thought about it.");
+  };
+}
+
+/* 7. Bible Trivia (Text): type the answer */
+function runTriviaText(){
+  const items = deckForTrivia().map(q => ({ q: q.q, answer: q.options[q.correct], info: q.info, accept: [] }));
+  textIntro("Bible Trivia (Text)", `<h2>Type the answer</h2><p>${QUIZ_LENGTH} random questions. Type a short answer for each.</p>`, () =>
+    typedRun(items, it => `<h3>${escapeHtml(it.q)}</h3>`, it => it.answer, (score, total) =>
+      withHH("Bible Trivia (Text)", score, total,
+        `You answered ${score} of ${total} correctly. Which question today taught you something new about God's word?`,
+        "Share one question from today's trivia with a friend or family member this week.")));
+}
+
+/* 8. Bible Characters (Text): read clues, type the name */
+function runCharactersText(){
+  const deck = shuffleArr(BIBLE_CHARS.filter(c => TEST(c.book) === ctx.testament)).concat(shuffleArr(BIBLE_CHARS.filter(c => TEST(c.book) !== ctx.testament)));
+  const chars = deck.slice(0, CHAR_ROUND);
+  let lives = 3, points = 0;
+  const end = () => withHH("Bible Characters (Text)", points, chars.length * 5,
+    `You scored ${points} of ${chars.length * 5} points. Which character from today encouraged you most?`,
+    "Tell someone about one Bible character you met today and what you learned from them.");
+  const round = (i, shown) => {
+    if(lives <= 0 || i >= chars.length) return end();
+    const c = chars[i];
+    stage().innerHTML = `
+      <div class="card">
+        <span class="badge b-game">Character ${i + 1} of ${chars.length}</span>
+        <div class="feedback">Lives: ${"❤️".repeat(lives)} &nbsp; Points: <span class="score">${points}</span></div>
+        <ol>${c.clues.slice(0, shown).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ol>
+        ${shown < c.clues.length ? '<button id="tc-clue" class="alt">Reveal next clue</button>' : ""}
+        <div style="margin-top:8px"><input type="text" id="tc" autocomplete="off" placeholder="Type the character's name"></div>
+        <div style="margin-top:8px"><button id="tc-go">Guess</button></div>
+        <div id="tc-fb"></div>
+      </div>`;
+    const clueBtn = document.getElementById("tc-clue");
+    if(clueBtn) clueBtn.onclick = () => round(i, shown + 1);
+    const guess = () => {
+      const btn = document.getElementById("tc-go");
+      if(btn.disabled) return;
+      const v = normAns(document.getElementById("tc").value);
+      if(v === normAns(c.name)){
+        points += 6 - shown;
+        btn.disabled = true;
+        document.getElementById("tc-fb").innerHTML = `<div class="feedback"><span class="score">Correct: ${escapeHtml(c.name)}</span> (+${6 - shown} points)<br>${escapeHtml(c.info)}</div><button id="tc-next">Next character</button>`;
+      } else {
+        lives--;
+        btn.disabled = true;
+        const out = lives <= 0;
+        document.getElementById("tc-fb").innerHTML = out
+          ? `<div class="feedback">Out of lives. The answer was <strong>${escapeHtml(c.name)}</strong>.<br>${escapeHtml(c.info)}</div><button id="tc-next">${T("finish")}</button>`
+          : `<div class="feedback">Not quite. You lost a life. Reveal another clue, or guess again.</div><button id="tc-again">Guess again</button>`;
+        if(!out) document.getElementById("tc-again").onclick = () => round(i, shown);
+      }
+      const next = document.getElementById("tc-next");
+      if(next) next.onclick = () => round(i + 1, 1);
+    };
+    document.getElementById("tc-go").onclick = guess;
+    document.getElementById("tc").addEventListener("keydown", e => { if(e.key === "Enter") guess(); });
+  };
+  textIntro("Bible Characters (Text)", `<h2>Who am I?</h2><p>${CHAR_ROUND} characters. Read the clues, then type the name. Fewer clues used means more points.</p>`, () => round(0, 1));
+}
+
+/* 9. Bible Crossword (Text): type each answer from its clue */
+function runCrosswordText(){
+  const entry = pool(PUZZLE_BANK, 1)[0];
+  const words = entry.words.slice(0, 10);
+  stage().innerHTML = `
+    <div class="card">
+      <span class="badge b-game">Bible Crossword (Text)</span>
+      <h2>${entry.title}</h2>
+      ${notice([entry])}
+      <p class="muted">Type the word for each clue. No grid is needed.</p>
+      <ol>${words.map((x, i) => `<li><div>${escapeHtml(x.clue)} <span class="muted">(${x.w.length} letters)</span></div><input type="text" class="ctx-in" data-w="${x.w}" autocomplete="off" style="margin:4px 0 10px"></li>`).join("")}</ol>
+      <button id="ctx-check">Check answers</button>
+      <div id="ctx-res"></div>
+    </div>`;
+  document.getElementById("ctx-check").onclick = () => {
+    let solved = 0;
+    document.querySelectorAll(".ctx-in").forEach(inp => {
+      const ok = inp.value.trim().toUpperCase() === inp.dataset.w;
+      inp.style.color = ok ? "#2e8b57" : "#c0475b";
+      if(ok) solved++;
+    });
+    document.getElementById("ctx-res").innerHTML = `
+      <div class="feedback"><span class="score">${solved} of ${words.length} correct</span></div>
+      <button id="ctx-next">Continue to Heart and Hands</button>`;
+    document.getElementById("ctx-next").onclick = () => withHH("Bible Crossword (Text)", solved, words.length,
+      "Which person or place from this crossword would you like to read about more?",
+      "Read the story of one name from this crossword in your Bible or audio Bible this week.");
+  };
+}
+
+/* 10. Word Unscramble (Text): unscramble each Bible word, using its clue */
+function scrambleWord(w){
+  for(let t = 0; t < 30; t++){
+    const s = shuffleArr(w.split("")).join("");
+    if(s !== w) return s;
+  }
+  return w;
+}
+function runWordSearchText(){
+  const entry = pool(PUZZLE_BANK, 1)[0];
+  const items = shuffleArr(entry.words).slice(0, 8).map(x => ({ q: `Unscramble: ${scrambleWord(x.w)}`, clue: x.clue, answer: x.w, info: "" }));
+  textIntro("Word Unscramble (Text)", `<h2>${entry.title}</h2><p>Eight Bible words are scrambled. Each has a clue. Type the correct word.</p>`, () =>
+    typedRun(items, it => `<h3>${escapeHtml(it.q)}</h3><p class="muted">Clue: ${escapeHtml(it.clue)}</p>`, it => it.answer, (score, total) =>
+      withHH("Word Unscramble (Text)", score, total,
+        "Which of these words reminded you of a story you know well?",
+        "Tell one person about the Bible story behind one of the words you unscrambled.")));
+}
+
+const TEXT_MODULES = [
+  {title:"Echo (Text)", badge:"Text - Head - Echo", cls:"b-head", desc:"Read a passage, hide it, then retell it from memory.", run:runEchoText},
+  {title:"Scene Detective (Text)", badge:"Text - Head - Observation", cls:"b-head", desc:"Read the story of a scene, then answer questions from memory.", run:runSceneText},
+  {title:"Covenant Quest (Text)", badge:"Text - Journey", cls:"b-game", desc:"Read each story from The Covenant film, then answer and reflect.", run:runCovenantText, noBook:true},
+  {title:"Who Said It (Text)", badge:"Text - Game", cls:"b-game", desc:"Type who spoke each quotation.", run:runWhoSaidText},
+  {title:"Story Builder (Text)", badge:"Text - Game", cls:"b-game", desc:"Read the events and type their correct order.", run:runStoryText},
+  {title:"Memory Verse (Text)", badge:"Text - Head - Memory", cls:"b-head", desc:"Type the whole verse from memory.", run:runMemoryText},
+  {title:"Bible Trivia (Text)", badge:"Text - Game", cls:"b-game", desc:"Type the answer to each trivia question.", run:runTriviaText},
+  {title:"Bible Characters (Text)", badge:"Text - Game", cls:"b-game", desc:"Read the clues, then type the character's name.", run:runCharactersText},
+  {title:"Bible Crossword (Text)", badge:"Text - Puzzle", cls:"b-game", desc:"Type the answer to each crossword clue.", run:runCrosswordText},
+  {title:"Word Unscramble (Text)", badge:"Text - Puzzle", cls:"b-game", desc:"Unscramble Bible words, using the clues. The text version of Word Search.", run:runWordSearchText}
+];
+let gameMode = "audio";
+
+if(activePlayer()){ go("home"); } else { showProfile(true); }
 });
 </script>
 </body>

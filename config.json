@@ -10,16 +10,56 @@
   "bibleBrain": {
     "defaultLanguage": "en",
     "languages": {
-      "en": { "name": "English", "audioFileset": "REPLACE_ENGLISH_AUDIO_FILESET", "videoFileset": "REPLACE_ENGLISH_VIDEO_FILESET" },
-      "hi": { "name": "Hindi", "audioFileset": "REPLACE_HINDI_AUDIO_FILESET", "videoFileset": "" },
-      "ml": { "name": "Malayalam", "audioFileset": "REPLACE_MALAYALAM_AUDIO_FILESET", "videoFileset": "" },
-      "ta": { "name": "Tamil", "audioFileset": "REPLACE_TAMIL_AUDIO_FILESET", "videoFileset": "" },
-      "te": { "name": "Telugu", "audioFileset": "REPLACE_TELUGU_AUDIO_FILESET", "videoFileset": "" },
-      "kn": { "name": "Kannada", "audioFileset": "REPLACE_KANNADA_AUDIO_FILESET", "videoFileset": "" },
-      "bn": { "name": "Bengali", "audioFileset": "REPLACE_BENGALI_AUDIO_FILESET", "videoFileset": "" },
-      "mr": { "name": "Marathi", "audioFileset": "REPLACE_MARATHI_AUDIO_FILESET", "videoFileset": "" },
-      "gu": { "name": "Gujarati", "audioFileset": "REPLACE_GUJARATI_AUDIO_FILESET", "videoFileset": "" },
-      "pa": { "name": "Punjabi", "audioFileset": "REPLACE_PUNJABI_AUDIO_FILESET", "videoFileset": "" }
+      "en": {
+        "name": "English",
+        "audioFileset": "REPLACE_ENGLISH_AUDIO_FILESET",
+        "videoFileset": "REPLACE_ENGLISH_VIDEO_FILESET"
+      },
+      "hi": {
+        "name": "Hindi",
+        "audioFileset": "REPLACE_HINDI_AUDIO_FILESET",
+        "videoFileset": ""
+      },
+      "ml": {
+        "name": "Malayalam",
+        "audioFileset": "REPLACE_MALAYALAM_AUDIO_FILESET",
+        "videoFileset": ""
+      },
+      "ta": {
+        "name": "Tamil",
+        "audioFileset": "REPLACE_TAMIL_AUDIO_FILESET",
+        "videoFileset": ""
+      },
+      "te": {
+        "name": "Telugu",
+        "audioFileset": "REPLACE_TELUGU_AUDIO_FILESET",
+        "videoFileset": ""
+      },
+      "kn": {
+        "name": "Kannada",
+        "audioFileset": "REPLACE_KANNADA_AUDIO_FILESET",
+        "videoFileset": ""
+      },
+      "bn": {
+        "name": "Bengali",
+        "audioFileset": "REPLACE_BENGALI_AUDIO_FILESET",
+        "videoFileset": ""
+      },
+      "mr": {
+        "name": "Marathi",
+        "audioFileset": "REPLACE_MARATHI_AUDIO_FILESET",
+        "videoFileset": ""
+      },
+      "gu": {
+        "name": "Gujarati",
+        "audioFileset": "REPLACE_GUJARATI_AUDIO_FILESET",
+        "videoFileset": ""
+      },
+      "pa": {
+        "name": "Punjabi",
+        "audioFileset": "REPLACE_PUNJABI_AUDIO_FILESET",
+        "videoFileset": ""
+      }
     }
   },
   "media": {
@@ -27,5 +67,10 @@
     "sceneVideo": "",
     "covenantAudio": "/api/audio/REPLACE_ENGLISH_AUDIO_FILESET/GEN/22",
     "quizAudio": "/api/audio/REPLACE_ENGLISH_AUDIO_FILESET/LUK/15"
+  },
+  "staticAudio": {
+    "enabled": false,
+    "folder": "media",
+    "note": "Set enabled to true only after the audio has been downloaded at build time and the licence allows it."
   }
 }

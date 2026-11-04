@@ -2,7 +2,7 @@
    Caches the game shell so it opens offline. Audio and text from the
    media proxy (/api/...) are always fetched live and never cached here.
    Bump CACHE_VERSION on every release so players receive the update. */
-const CACHE_VERSION = "wordplay-v1";
+const CACHE_VERSION = "wordplay-v2";
 const SHELL = [
   "./",
   "./index.html",
@@ -31,6 +31,7 @@ self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
   if (url.origin !== self.location.origin) return;     // other sites: normal network
   if (url.pathname.includes("/api/")) return;          // media proxy: always live
+  if (url.pathname.includes("/media/")) return;     // offline audio: not cached by the app shell
 
   event.respondWith(
     caches.match(event.request).then(cached => {

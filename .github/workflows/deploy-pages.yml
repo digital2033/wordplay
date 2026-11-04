@@ -58,6 +58,12 @@ jobs:
           cp index.html config.json manifest.webmanifest sw.js _site/
           cp icons/*.png _site/icons/
 
+      - name: Download licensed audio for offline use (optional)
+        if: vars.DOWNLOAD_AUDIO == 'true'
+        env:
+          BIBLE_BRAIN_KEY: ${{ secrets.BIBLE_BRAIN_KEY }}
+        run: python3 scripts/fetch_offline_audio.py
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3

@@ -1,0 +1,7 @@
+{
+  "_comment": "Chapters to download at build time. Only use when the Bible Brain licence allows public redistribution. Turn on by setting the repository variable DOWNLOAD_AUDIO to true.",
+  "items": [
+    { "fileset": "REPLACE_ENGLISH_AUDIO_FILESET", "book": "LUK", "chapter": 15 },
+    { "fileset": "REPLACE_ENGLISH_AUDIO_FILESET", "book": "GEN", "chapter": 22 }
+  ]
+}

@@ -71,3 +71,28 @@ The workflow in `.github/workflows/deploy-pages.yml` runs on every push to `main
 3. Publishes only the public files (`index.html`, `config.json`, `manifest.webmanifest`, `sw.js`, `icons/`) to GitHub Pages.
 
 **One-time setup:** in the repository go to **Settings > Pages** and set **Source** to **GitHub Actions** (not "Deploy from a branch"). After that, pushing to `main` publishes the game automatically.
+
+## Offline audio at build time (optional, Option 1)
+
+This publishes chapter audio as part of the public GitHub Pages site, so the game can play it without the media proxy server.
+
+**Only turn this on after confirming that the Bible Brain licence allows public redistribution.** Anyone can download files published this way.
+
+1. Add the key as a repository secret: **Settings > Secrets and variables > Actions > New repository secret**, name `BIBLE_BRAIN_KEY`.
+2. Edit `offline-audio.json` and list the chapters to include, using the fileset ID and three-letter book code (for example `LUK` and chapter `15`).
+3. Turn on the download: **Settings > Secrets and variables > Actions > Variables**, add `DOWNLOAD_AUDIO` with the value `true`.
+4. In `config.json`, set `staticAudio.enabled` to `true`.
+5. Push to `main`. The audio is downloaded during the build and published under `media/`.
+
+The build stops if the total size exceeds 800 MB (set by `MAX_MB`), since GitHub Pages sites have a size limit. The key is used only during the build and is never written to the published files.
+
+To return to the server approach, set `DOWNLOAD_AUDIO` to `false` and `staticAudio.enabled` to `false`.
+
+## Audio and text games
+
+On the **Play** page, a switch chooses the game set:
+
+- **Audio games:** the original ten games, with audio and video where content is available (Echo, Scene Detective and Covenant Quest use audio or film clips).
+- **Text games:** a text version of every game. Players read passages and scenes, type their answers, and unscramble or type words instead of tapping options.
+
+Text games are recorded in the history with "(Text)" after the game name, so progress in each set can be seen separately.
