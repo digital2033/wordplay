@@ -4,6 +4,13 @@ All notable changes to Wordplay are recorded here. Versions follow the form `maj
 
 ## 1.5.4 - Bible Brain catalogue discovery (in progress)
 
+### Found in the third discovery run
+- Country-to-language link: `/languages?country=XX` returns the languages spoken in a country, with Bible and fileset counts.
+- Filter by language ID works: `/bibles?language_id=N`. The ISO filter `/bibles?iso=` does not, and returns Bibles in other languages.
+- Audio chapter route confirmed: `/bibles/filesets/{fileset}/{book}/{chapter}` returns a signed `path` to the audio file, as the media server expects.
+- Text chapter route: not yet confirmed. The next round tests it with a text fileset.
+
+
 ### Found in the first discovery run
 - Languages: 2,677 in total, each with an ISO code, names, and counts of Bibles and filesets.
 - Countries: 227, with codes but no language list.
