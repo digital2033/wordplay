@@ -1,5 +1,5 @@
 {
-  "_comment": "The Bible versions players can choose. Country > language > version. Each version's id is its Bible Brain TEXT fileset ID. Set enabled to true to download it at build time (DOWNLOAD_TEXT=true). scope: 'games' downloads only the chapters the games use (game-chapters.json); 'full' downloads the whole Bible. Find IDs in the Bible Brain Postman collection or account.",
+  "_comment": "Bible versions players can choose. Country > language > version. A version lists its TEXT filesets: 'filesets' has one fileset for the Old Testament (OT) and one for the New Testament (NT), or a single complete fileset under 'C'. Set enabled to true to download it at build time (DOWNLOAD_TEXT=true). scope: 'games' downloads only the chapters the games use (game-chapters.json); 'full' downloads the whole Bible.",
   "countries": [
     {
       "code": "US",
@@ -9,7 +9,7 @@
           "code": "eng",
           "name": "English",
           "versions": [
-            { "id": "ENGKJV", "name": "King James Version", "scope": "games", "enabled": true }
+            { "id": "ENGKJV", "name": "King James Version", "filesets": { "OT": "ENGKJVO_ET", "NT": "ENGKJVN_ET" }, "scope": "games", "enabled": true }
           ]
         }
       ]
@@ -22,7 +22,7 @@
           "code": "mal",
           "name": "Malayalam",
           "versions": [
-            { "id": "MALBCM", "name": "Malayalam version (1910)", "scope": "games", "enabled": true }
+            { "id": "MALBCM", "name": "Malayalam Bible 1910 (Revised)", "filesets": { "OT": "MALBCMO_ET", "NT": "MALBCMN_ET" }, "scope": "games", "enabled": true }
           ]
         }
       ]

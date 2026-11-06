@@ -2250,7 +2250,7 @@ function soonNote(){
 }
 
 function setFilter(f){ gameFilter = f; renderGames(); }
-function loadCatalog(){
+function legacy_loadCatalog(){
   const norm = c => ({ countries: (c.countries || []).map(co => ({
     code: co.code, name: co.name,
     languages: (co.languages || []).map(la => ({
@@ -2259,10 +2259,10 @@ function loadCatalog(){
         const fileset = v.fileset || v.id;
         // a version is playable only when its text was published (text/catalog.json marks it available)
         const available = ("available" in v) ? !!v.available : false;
-        return { fileset, name: v.name, available };
+        return { fileset, name: v.name, available, filesets: v.filesets || null };
       }).filter(v => v.fileset)
-    })).filter(la => la.versions.length)
-  })).filter(co => co.languages.length) });
+    })).filter(la => la.versions.length).sort((a, b) => a.name.localeCompare(b.name))
+  })).filter(co => co.languages.length).sort((a, b) => a.name.localeCompare(b.name)) });
   // Prefer the published catalogue; otherwise show the configured list (all versions marked coming soon)
   return fetch("text/catalog.json", { cache: "no-cache" })
     .then(r => r.ok ? r.json() : null)
@@ -2270,21 +2270,21 @@ function loadCatalog(){
     .then(c => { if(c && Array.isArray(c.countries)) BIBLE_CATALOG = norm(c); })
     .catch(() => {});
 }
-function currentBible(){
+function legacy_currentBible(){
   const C = BIBLE_CATALOG.countries;
   const saved = DB.settings.bible || {};
   if(!C.length) return { country: null, lang: null, fileset: null, available: false, name: "King James Version (built-in)" };
   const c = C.find(x => x.code === saved.country) || C[0];
   const l = c.languages.find(x => x.code === saved.lang) || c.languages[0];
   const v = l.versions.find(x => x.fileset === saved.fileset) || l.versions[0];
-  return { country: c.code, lang: l.code, fileset: v.fileset, available: v.available, name: v.name };
+  return { country: c.code, lang: l.code, fileset: v.fileset, available: v.available, name: v.name, filesets: v.filesets || null };
 }
-function setBible(country, lang, fileset){
+function legacy_setBible(country, lang, fileset){
   DB.settings.bible = { country, lang, fileset };
   saveDB();
   renderBiblePicker();
 }
-function renderBiblePicker(){
+function legacy_renderBiblePicker(){
   const el = document.getElementById("bible-picker");
   if(!el) return;
   const C = BIBLE_CATALOG.countries;
@@ -2435,7 +2435,7 @@ function parseRef(ref){
   const to = m[4] ? +m[4] : (m[3] ? from : 999);
   return { code, ch, from, to };
 }
-async function fetchPassage(ref){
+async function legacy_fetchPassage(ref){
   const bible = currentBible();
   if(!bible.fileset || !bible.available) return null;
   const p = parseRef(ref);
@@ -2443,9 +2443,12 @@ async function fetchPassage(ref){
   const base = (APP_CONFIG.api && APP_CONFIG.api.base) || "";
   const isStatic = !!((APP_CONFIG.staticText || {}).enabled);
   if(!isStatic && !base) return null;
+  // Old Testament books use the OT fileset, New Testament books the NT fileset (or a complete one)
+  const isOT = BOOK_CODE_LIST.indexOf(p.code) < 39;
+  const fs = (bible.filesets && (bible.filesets[isOT ? "OT" : "NT"] || bible.filesets.C)) || bible.fileset;
   const url = isStatic
-    ? `text/${bible.fileset}/${p.code}/${p.ch}.json`
-    : `${base}/api/text/${bible.fileset}/${p.code}/${p.ch}`;
+    ? `text/${fs}/${p.code}/${p.ch}.json`
+    : `${base}/api/text/${fs}/${p.code}/${p.ch}`;
   try{
     const r = await fetch(url);
     if(!r.ok) return null;
@@ -2488,6 +2491,253 @@ function runMemoryAudio(){
       <button id="mva-go">Start typing</button>
     </div>`;
   document.getElementById("mva-go").onclick = () => runMemoryText();
+}
+
+  /* ===== BIBLE TEXT ===================================================
+   1. Built-in English (King James Version), embedded in the app. Works offline.
+   2. Bible Brain browser: the Quiz Master's own key (typed in, kept only in memory)
+      lists countries, languages and Bibles; chosen Bibles are downloaded to this device.
+   The key is never saved and is not sent anywhere except to Bible Brain.
+   ==================================================================== */
+const DEFAULT_BIBLE_URL = "default-bible/en-kjv.json.gz";
+const DEFAULT_BIBLE_NAME = "King James Version (built in)";
+const BB_API = "https://4.dbt.io/api/";
+const BOOK_CHAPTERS = {GEN:50,EXO:40,LEV:27,NUM:36,DEU:34,JOS:24,JDG:21,RUT:4,"1SA":31,"2SA":24,"1KI":22,"2KI":25,"1CH":29,"2CH":36,EZR:10,NEH:13,EST:10,JOB:42,PSA:150,PRO:31,ECC:12,SNG:8,ISA:66,JER:52,LAM:5,EZK:48,DAN:12,HOS:14,JOL:3,AMO:9,OBA:1,JON:4,MIC:7,NAM:3,HAB:3,ZEP:3,HAG:2,ZEC:14,MAL:4,MAT:28,MRK:16,LUK:24,JHN:21,ACT:28,ROM:16,"1CO":16,"2CO":13,GAL:6,EPH:6,PHP:4,COL:4,"1TH":5,"2TH":3,"1TI":6,"2TI":4,TIT:3,PHM:1,HEB:13,JAS:5,"1PE":5,"2PE":3,"1JN":5,"2JN":1,"3JN":1,JUD:1,REV:22};
+const OT_CODE_LIST = BOOK_CODE_LIST.slice(0, 39);
+
+let DEFAULT_TEXT = null;     // the embedded English, once loaded
+let BB_KEY = "";             // the user's own key: memory only
+let BP = { countries: null, langs: null, bibles: null, status: "", busy: false };
+
+function loadDefaultBible(){
+  if(DEFAULT_TEXT) return Promise.resolve(DEFAULT_TEXT);
+  if(typeof DecompressionStream === "undefined" || typeof Response === "undefined") return Promise.resolve(null);
+  return fetch(DEFAULT_BIBLE_URL)
+    .then(r => { if(!r.ok) throw new Error("no default"); return new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).json(); })
+    .then(j => (DEFAULT_TEXT = j))
+    .catch(() => null);
+}
+function loadCatalog(){ return loadDefaultBible(); }
+
+/* ---- storage: downloaded chapters live in IndexedDB (memory fallback if unavailable) ---- */
+const BIBLE_STORE = { db: null, mem: {} };
+function idbOpen(){
+  if(BIBLE_STORE.db) return Promise.resolve(BIBLE_STORE.db);
+  if(typeof indexedDB === "undefined") return Promise.resolve(null);
+  return new Promise(res => {
+    const rq = indexedDB.open("wordplay-bible", 1);
+    rq.onupgradeneeded = () => rq.result.createObjectStore("chapters");
+    rq.onsuccess = () => { BIBLE_STORE.db = rq.result; res(BIBLE_STORE.db); };
+    rq.onerror = () => res(null);
+  });
+}
+function idbPut(key, val){
+  return idbOpen().then(db => {
+    if(!db){ BIBLE_STORE.mem[key] = val; return; }
+    return new Promise((res, rej) => {
+      const tx = db.transaction("chapters", "readwrite");
+      tx.objectStore("chapters").put(val, key);
+      tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error);
+    });
+  });
+}
+function idbGet(key){
+  return idbOpen().then(db => {
+    if(!db) return BIBLE_STORE.mem[key] || null;
+    return new Promise(res => {
+      const rq = db.transaction("chapters", "readonly").objectStore("chapters").get(key);
+      rq.onsuccess = () => res(rq.result || null); rq.onerror = () => res(null);
+    });
+  });
+}
+function bibleIndex(){ return idbGet("index").then(x => x || []); }
+function bibleAddToIndex(abbr){
+  return bibleIndex().then(list => { if(list.indexOf(abbr) < 0){ list.push(abbr); return idbPut("index", list); } });
+}
+
+/* ---- passages: from the chosen Bible if it has the chapter, otherwise the built-in English ---- */
+async function fetchPassage(ref){
+  const p = parseRef(ref);
+  if(!p) return null;
+  const pick = DB.settings.biblePick;
+  if(pick && pick.source === "bb" && pick.filesets){
+    const fs = pick.filesets[OT_CODE_LIST.indexOf(p.code) >= 0 ? "OT" : "NT"] || pick.filesets.C;
+    const rows = fs ? await idbGet(`v|${fs}|${p.code}|${p.ch}`) : null;
+    if(rows){
+      const v = rows.filter(x => x[0] >= p.from && x[0] <= p.to);
+      if(v.length) return { text: v.map(x => x[1]).join(" "), name: pick.name };
+    }
+  }
+  const d = await loadDefaultBible();
+  const chapter = d && d.books[p.code] && d.books[p.code][String(p.ch)];
+  if(!chapter) return null;
+  const v = chapter.filter(x => x[0] >= p.from && x[0] <= p.to);
+  return v.length ? { text: v.map(x => x[1]).join(" "), name: DEFAULT_BIBLE_NAME } : null;
+}
+
+/* ---- Bible Brain calls (the user's key, sent only to Bible Brain) ---- */
+function bbUrl(path, params){
+  const q = Object.assign({ v: "4", key: BB_KEY }, params || {});
+  return BB_API + path + "?" + Object.keys(q).filter(k => q[k] !== "" && q[k] != null)
+    .map(k => k + "=" + encodeURIComponent(q[k])).join("&");
+}
+async function bbJson(path, params){
+  const r = await fetch(bbUrl(path, params));
+  if(!r.ok){ const e = new Error("http"); e.status = r.status; throw e; }
+  return r.json();
+}
+async function bbList(path, params){
+  let out = [];
+  for(let page = 1; page <= 15; page++){
+    const j = await bbJson(path, Object.assign({ limit: "200", page: String(page) }, params || {}));
+    out = out.concat(j.data || []);
+    const pg = j.meta && j.meta.pagination;
+    if(!(pg && pg.current_page < pg.total_pages)) break;
+  }
+  return out;
+}
+const bbSleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* text filesets only (plain text or JSON); the chapter route serves these */
+function bbTextFilesets(bible){
+  const out = [], buckets = bible.filesets || {};
+  const list = Array.isArray(buckets) ? buckets : [].concat(...Object.values(buckets));
+  list.forEach(f => { if(f && f.id && /^text_(plain|json)$/i.test(f.type || "")) out.push({ id: f.id, type: f.type, size: String(f.size || "").toUpperCase() }); });
+  return out;
+}
+function bbSizeLabel(s){ return s === "OT" ? "Old Testament" : s === "NT" ? "New Testament" : s === "C" ? "Complete" : (s || "Text"); }
+
+/* download every chapter of one fileset into this device */
+async function bbDownloadFileset(bible, fset){
+  const codes = fset.size === "OT" ? OT_CODE_LIST : fset.size === "NT" ? BOOK_CODE_LIST.slice(39) : BOOK_CODE_LIST;
+  const total = codes.reduce((a, c) => a + BOOK_CHAPTERS[c], 0);
+  let done = 0;
+  for(const code of codes){
+    for(let ch = 1; ch <= BOOK_CHAPTERS[code]; ch++){
+      const j = await bbJson(`bibles/filesets/${encodeURIComponent(fset.id)}/${code}/${ch}`, {});
+      const rows = (j.data || []).map(r => [parseInt(r.verse_start, 10), String(r.verse_text || "").trim()]).filter(x => x[0] && x[1]);
+      await idbPut(`v|${fset.id}|${code}|${ch}`, rows);
+      done++;
+      BP.status = `Downloading ${bible.name}: ${done} of ${total} chapters`;
+      renderBiblePicker();
+      await bbSleep(120);
+    }
+  }
+  const meta = (await idbGet(`m|${bible.abbr}`)) || { abbr: bible.abbr, name: bible.name, lang: bible.lang, filesets: {} };
+  meta.filesets[fset.size || "C"] = fset.id;
+  await idbPut(`m|${bible.abbr}`, meta);
+  await bibleAddToIndex(bible.abbr);
+  return meta;
+}
+
+/* ---- the chooser on the home page ---- */
+async function bpLoadCountries(){
+  const key = (document.getElementById("bp-key").value || "").trim();
+  if(!key){ BP.status = "Type your Bible Brain key first."; return renderBiblePicker(); }
+  BB_KEY = key;
+  BP.status = "Loading countries..."; renderBiblePicker();
+  try{
+    const cs = await bbList("countries", {});
+    BP.countries = cs.map(c => ({ code: (c.codes && (c.codes.iso_a2 || c.codes.iso_a3)) || c.iso || c.id || "", name: c.name || "" }))
+      .filter(c => c.code).sort((a, b) => a.name.localeCompare(b.name));
+    BP.langs = null; BP.bibles = null;
+    BP.status = `${BP.countries.length} countries loaded.`;
+  }catch(e){ BP.status = e.status ? `Bible Brain answered HTTP ${e.status}. Check the key.` : "Could not reach Bible Brain."; }
+  renderBiblePicker();
+}
+async function bpPickCountry(code){
+  BP.bibles = null; BP.langs = null;
+  if(!code){ renderBiblePicker(); return; }
+  BP.status = "Loading languages..."; renderBiblePicker();
+  try{
+    const ls = await bbList("languages", { country: code });
+    const seen = {};
+    BP.langs = ls.filter(l => { const id = l.iso || l.id; if(seen[id]) return false; seen[id] = 1; return true; })
+      .map(l => ({ iso: l.iso || "", id: l.id, name: l.name || l.iso || String(l.id), autonym: l.autonym || "" }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    BP.status = BP.langs.length ? `${BP.langs.length} languages.` : "No languages listed for this country.";
+  }catch(e){ BP.status = "Could not load languages."; }
+  renderBiblePicker();
+}
+async function bpPickLanguage(idx){
+  BP.bibles = null;
+  const lang = BP.langs && BP.langs[+idx];
+  if(!lang){ renderBiblePicker(); return; }
+  BP.status = "Loading Bibles..."; renderBiblePicker();
+  try{
+    const bs = await bbList("bibles", { language_code: lang.iso });
+    BP.bibles = bs.map(b => ({ abbr: b.abbr || b.id || "", name: b.vname || b.name || b.abbr || "", lang: lang.name, filesets: bbTextFilesets(b) }))
+      .filter(b => b.filesets.length);
+    BP.status = BP.bibles.length ? `${BP.bibles.length} Bibles with text in ${lang.name}.` : `No text Bibles listed for ${lang.name}.`;
+  }catch(e){ BP.status = "Could not load Bibles."; }
+  renderBiblePicker();
+}
+async function bpDownload(abbr, fsetId){
+  const bible = (BP.bibles || []).find(b => b.abbr === abbr);
+  const fset = bible && bible.filesets.find(f => f.id === fsetId);
+  if(!fset || BP.busy) return;
+  BP.busy = true;
+  try{
+    const meta = await bbDownloadFileset(bible, fset);
+    BP.status = `${bible.name}: ${bbSizeLabel(fset.size)} downloaded.`;
+    DB.settings.biblePick = { source: "bb", abbr, name: bible.name, filesets: meta.filesets };
+    saveDB();
+  }catch(e){ BP.status = e.status ? `Download stopped: HTTP ${e.status}.` : "Download stopped: network error."; }
+  BP.busy = false;
+  renderBiblePicker();
+}
+async function bpUseDownloaded(abbr){
+  const meta = await idbGet(`m|${abbr}`);
+  if(!meta) return;
+  DB.settings.biblePick = { source: "bb", abbr, name: meta.name, filesets: meta.filesets };
+  saveDB(); renderBiblePicker();
+}
+async function bpDownloadedList(){
+  const abbrs = await bibleIndex(), out = [];
+  for(const a of abbrs){ const m = await idbGet(`m|${a}`); if(m) out.push(m); }
+  return out;
+}
+function bpSelect(id, items, selected, placeholder, attrs){
+  return `<select id="${id}" ${attrs || ""} style="width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid rgba(127,127,127,.4);background:var(--bg);color:var(--ink);margin-bottom:8px">
+    <option value="">${escapeHtml(placeholder)}</option>${items.map(([v, t]) => `<option value="${escapeHtml(v)}" ${v === selected ? "selected" : ""}>${escapeHtml(t)}</option>`).join("")}</select>`;
+}
+function renderBiblePicker(){
+  const el = document.getElementById("bible-picker");
+  if(!el) return;
+  const pick = DB.settings.biblePick || { source: "default" };
+  const usingDefault = !pick.filesets;
+  const downloaded = (BP.downloaded || []);
+  el.innerHTML = `
+    <p class="muted" style="margin:6px 0 2px">Bible text for Echo passages</p>
+    ${bpSelect("bp-source", [["default", DEFAULT_BIBLE_NAME + " (English, built in)"]].concat(downloaded.map(m => ["m:" + m.abbr, m.name + " (downloaded)"])), usingDefault ? "default" : "m:" + pick.abbr, "", "")}
+    <details style="margin-top:6px">
+      <summary>Add a Bible from Bible Brain</summary>
+      <p class="muted" style="font-size:.82rem">Type your own free Bible Brain key. It is used only to fetch the text and is not saved. Downloaded text stays on this device.</p>
+      <input type="password" id="bp-key" autocomplete="off" placeholder="Bible Brain API key" value="${escapeHtml(BB_KEY)}" style="width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid rgba(127,127,127,.4);background:var(--bg);color:var(--ink);margin-bottom:8px">
+      <button id="bp-load" class="alt">Load countries</button>
+      ${BP.countries ? bpSelect("bp-country", BP.countries.map(c => [c.code, c.name]), BP.country || "", "Choose a country", "") : ""}
+      ${BP.langs ? bpSelect("bp-lang", BP.langs.map((l, i) => [String(i), l.name + (l.autonym && l.autonym !== l.name ? " (" + l.autonym + ")" : "")]), "", "Choose a language", "") : ""}
+      <div id="bp-bibles">${(BP.bibles || []).map(b => `
+        <div style="margin:6px 0"><strong>${escapeHtml(b.name)}</strong> <span class="muted">${escapeHtml(b.abbr)}</span><br>
+          ${b.filesets.map(f => `<button class="alt" data-dl="${escapeHtml(b.abbr)}" data-fs="${escapeHtml(f.id)}">Download ${bbSizeLabel(f.size)}</button>`).join("")}
+          ${downloaded.some(m => m.abbr === b.abbr) ? `<button data-use="${escapeHtml(b.abbr)}">Use this Bible</button>` : ""}
+        </div>`).join("")}</div>
+      <p class="note" id="bp-msg">${escapeHtml(BP.status || "")}</p>
+    </details>`;
+  const src = document.getElementById("bp-source");
+  if(src) src.onchange = e => {
+    if(e.target.value === "default") DB.settings.biblePick = { source: "default" };
+    else { const abbr = e.target.value.slice(2); bpUseDownloaded(abbr); return; }
+    saveDB(); renderBiblePicker();
+  };
+  document.getElementById("bp-load").onclick = bpLoadCountries;
+  const cc = document.getElementById("bp-country");
+  if(cc) cc.onchange = e => { BP.country = e.target.value; bpPickCountry(e.target.value); };
+  const lg = document.getElementById("bp-lang");
+  if(lg) lg.onchange = e => bpPickLanguage(e.target.value);
+  el.querySelectorAll("[data-dl]").forEach(b => b.onclick = () => bpDownload(b.dataset.dl, b.dataset.fs));
+  el.querySelectorAll("[data-use]").forEach(b => b.onclick = () => bpUseDownloaded(b.dataset.use));
+  bpDownloadedList().then(list => { if(JSON.stringify(list) !== JSON.stringify(BP.downloaded || [])){ BP.downloaded = list; renderBiblePicker(); } });
 }
 
 loadConfig().then(loadCatalog).then(() => {

@@ -2,6 +2,60 @@
 
 All notable changes to Wordplay are recorded here. Versions follow the form `major.minor`.
 
+## 1.6.2 - Documentation
+
+### Added
+- `README.md` rewritten for players and partners: all ten games with their formats and media types, filters, scoring, levels and badges, the Bible text options, languages, offline use, privacy, known limits and credits.
+- `DEVELOPER.md`: project layout, how `index.html` is organised, how to add a game, a language, content and Bible text, the scripts, and a release checklist.
+- `DEPLOYMENT.md` rewritten: publishing on GitHub Pages, the settings in `config.json`, the built-in Bible, the optional build steps and their variables, and the two audio and video routes.
+
+### Changed
+- The optional variables `DOWNLOAD_TEXT` and `DOWNLOAD_DEFAULT_BIBLE` are documented as not needed, since the chooser downloads Bibles itself and the English is committed.
+
+## 1.6.1 - King James Version embedded
+
+### Added
+- `default-bible/en-kjv.json.gz`: the complete King James Version (66 books, 1,189 chapters, 31,102 verses, 1.2 MB), made from the USX files supplied for the project. It is part of the app, so the default English works offline with no key.
+- `scripts/usx_to_default_bible.py`: converts USX 3.0 files (zip or folder) into the embedded file, and stops if any book or chapter is missing. Used to make the file above; it needs no key.
+- The publishing workflow copies `default-bible/` into the site, and the service worker caches the file.
+
+### Notes
+- Leave the repository variable `DOWNLOAD_DEFAULT_BIBLE` unset. The embedded file is now committed, so the download step is not needed.
+- The other Bibles are still downloaded by the player with their own Bible Brain key.
+
+## 1.6.0 - Bible text on the device (Option A)
+
+### Added
+- **Built-in English (King James Version).** `scripts/build_default_english.py` downloads the KJV once at build time (the `BIBLE_BRAIN_KEY` secret) and embeds it as `default-bible/en-kjv.json.gz`. Echo passages use it with no key and no internet. Enable with the repository variable `DOWNLOAD_DEFAULT_BIBLE` = `true`. Until then, Echo uses its short built-in passages.
+- **Bible Brain browser.** "Add a Bible from Bible Brain": the player types their own free key (kept in memory only, never saved), chooses a country (all countries from Bible Brain), a language for that country, then a Bible with text. Each testament (OT, NT or complete) is downloaded to the device, one chapter at a time, with progress.
+- **Downloaded Bibles** are stored in the browser (IndexedDB), and the Bible for Echo can be switched on the home page. New Testament passages fall back to the built-in English if the downloaded Bible has only the Old Testament.
+- The service worker caches the embedded English file when it is present, without stopping the install if it is missing.
+
+### Changed
+- Replaces the build-time Bible choice (country, language and version from `bible-catalog.json`). `bible-catalog.json` is still used by the optional build downloads.
+
+### Notes
+- Checked by simulation only: the country list, language filter, Bible list, download and reading back of passages. Not yet run against the real Bible Brain API or in a real browser.
+- The Bible Brain language filter for Bibles is `language_code` (as OBQ uses), not `iso`.
+
+## 1.5.6 - All countries in the chooser (in progress)
+
+### Changed
+- The Country, Language and Version lists are sorted by name, so long lists are easy to scan.
+
+### Planned
+- A build step that lists every country from Bible Brain, and the languages for each country, so every country appears in the dropdown and its languages are filtered by the country chosen. The discovery run (round 6) checks the country code format and the per-country language lookup first.
+
+## 1.5.5 - One fileset per testament
+
+### Fixed
+- Bible Brain splits most text versions into an Old Testament fileset and a New Testament fileset (for example `MALBCMO_ET` and `MALBCMN_ET`). The old single-ID catalogue (`MALBCM`) returned 404 and was skipped.
+
+### Changed
+- `bible-catalog.json`: each version lists `filesets` with `OT` and `NT` IDs (or `C` for a complete fileset). English KJV uses `ENGKJVO_ET` and `ENGKJVN_ET`. Malayalam 1910 uses `MALBCMO_ET` and `MALBCMN_ET`.
+- `fetch_offline_text.py` picks the right fileset for each book, and writes the published catalogue with each version's filesets.
+- Passages in the game use the OT or NT fileset for the book being read.
+
 ## 1.5.4 - Bible Brain catalogue discovery (in progress)
 
 ### Found in the third discovery run

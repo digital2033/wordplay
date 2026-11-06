@@ -11,10 +11,12 @@ const SHELL = [
   "./icons/icon-192.png",
   "./icons/icon-512.png"
 ];
+// The embedded English Bible is cached when present; a missing file must not stop the app installing.
+const OPTIONAL = ["./default-bible/en-kjv.json.gz"];
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_VERSION).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting())
+    caches.open(CACHE_VERSION).then(cache => cache.addAll(SHELL).then(() => Promise.all(OPTIONAL.map(u => cache.add(u).catch(() => null))))).then(() => self.skipWaiting())
   );
 });
 

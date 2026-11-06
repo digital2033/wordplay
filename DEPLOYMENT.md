@@ -1,146 +1,110 @@
-# Deployment and Bible Brain setup
+# Deployment
 
-This guide covers publishing Wordplay, setting up the media server, and connecting the Bible Brain API key.
+How to publish Wordplay, and how the optional parts (audio, video, Bible Brain) are set up.
 
-## 1. Keep the key secret
+Wordplay is a static web app. It needs no server to run. Publishing it means putting its files on a web address, usually GitHub Pages.
 
-- The Bible Brain key is **never** placed in the game files, `config.json`, or the GitHub repository.
-- The key is stored only as an **environment variable on the media server** (cPanel Node.js app), named `BIBLE_BRAIN_KEY`.
-- The only exception is optional build-time audio download (section 5), which stores the key as a GitHub **secret** used during the build only.
+---
 
-## 2. Publish the game (GitHub Pages)
+## 1. Publish on GitHub Pages
 
-1. Create a public repository, for example `wordplay`.
-2. Push the game folder to the `main` branch.
-3. In **Settings > Pages**, set **Source** to **GitHub Actions**.
-4. The workflow `.github/workflows/deploy-pages.yml` checks the files and publishes them. The game will be at `https://<your-account>.github.io/wordplay/`.
+1. Create a **public** repository, for example `wordplay`. (GitHub Pages on a free account needs a public repository.)
+2. Push the contents of the game folder to the `main` branch. Push the files, not a zip.
+3. In **Settings > Pages**, set **Source** to **GitHub Actions**. The default "Deploy from a branch" will not run the workflow.
+4. The workflow `.github/workflows/deploy-pages.yml` checks the files and publishes them. Open the **Actions** tab to see progress.
+5. The game is at `https://<your-account>.github.io/wordplay/`.
 
-## 3. Set up the media server (cPanel)
+The workflow publishes only the files the game needs: `index.html`, `config.json`, `manifest.webmanifest`, `sw.js`, `bible-catalog.json`, `icons/` and `default-bible/`.
 
-1. In cPanel, create a subdomain such as `api.yourdomain.org` and turn on AutoSSL.
-2. Open **Setup Node.js App** and choose **Node.js 20** (18 or later), production mode, and startup file `server.js`.
-3. Upload the `wordplay-server` files to the application root, then run **Run NPM Install**.
-4. Add environment variables in the same page:
+### Updating the game
 
-| Name | Value |
-|---|---|
-| `BIBLE_BRAIN_KEY` | Your Bible Brain key |
-| `ALLOWED_FILESETS` | Comma-separated fileset IDs the game may use, no spaces |
-| `ALLOWED_ORIGINS` | Your game address, for example `https://<your-account>.github.io` (no trailing slash) |
-
-5. Restart the application.
-6. Test: `https://api.yourdomain.org/api/health` should return `{"ok":true}`.
-
-If `ALLOWED_FILESETS` does not include a fileset, the server returns 403.
-
-## 4. Connect the Bible Brain text and audio
-
-1. Find the **filesets** for each language in your Bible Brain account. Text and audio filesets have separate IDs.
-2. Add every fileset ID to `ALLOWED_FILESETS` on the server, and restart it.
-3. In `config.json` in the game repository:
-   - set `api.base` to your server address, for example `https://api.yourdomain.org`;
-   - for each language under `bibleBrain.languages`, set `textFileset` and `audioFileset` to the Bible Brain IDs;
-   - replace the `REPLACE_..._FILESET` placeholders in `media` with the chapter paths you want to use, such as `/api/audio/<fileset>/LUK/15`.
-4. Commit and push. The game's language list shows every language that has a `textFileset` set.
-
-**What happens in the game:**
-- Echo fetches the passage it uses (for example Luke 15:11-24) in the chosen Bible language. References with chapter ranges, such as Jonah 1-3, use the built-in text.
-- Audio formats (Who Said It, Memory Verse) play the audio paths in `media` when they are set.
-- If the server cannot be reached, the game uses its built-in text and shows placeholders for audio and video.
-
-## 5. Optional: audio published at build time
-
-This copies the listed chapters into the public site, so anyone can download them. **Use it only after confirming that the Bible Brain licence allows public redistribution.**
-
-1. Add `BIBLE_BRAIN_KEY` as a repository secret (**Settings > Secrets and variables > Actions**).
-2. List the chapters in `offline-audio.json`.
-3. Add the repository variable `DOWNLOAD_AUDIO` with the value `true`.
-4. Set `staticAudio.enabled` to `true` in `config.json`.
-
-The build stops if the audio exceeds 800 MB. Set `DOWNLOAD_AUDIO` to `false` to stop.
-
-## 6. Film clips
-
-Scene Detective and Covenant Quest play video or audio from the `media` section of `config.json`:
-
-- `sceneVideo`: a Gospel, Acts or Covenant film clip link (for Scene Detective).
-- `covenantAudio`: the audio for Covenant Quest, one path per clip.
-
-Clip timings should follow the Covenant clip guide. Check the licence for each film before publishing clips.
-
-## 7. Updating the game
-
-1. Edit the files and push to `main`.
-2. Increase `CACHE_VERSION` in `sw.js` when the offline files change, so installed apps update.
+1. Edit the files, commit, and push to `main`.
+2. Increase `CACHE_VERSION` in `sw.js` (for example from `wordplay-v3` to `wordplay-v4`) when the offline files change, so installed copies update.
 3. Record the change in `CHANGELOG.md`.
 
-Game pages and `config.json` are always fetched from the network first, so players see new content without clearing the cache.
+The game page and `config.json` are always fetched from the network first, so players see changes without clearing the cache.
 
-## 8. Server deployment through GitHub Actions (optional)
+---
 
-The `wordplay-server` repository contains `.github/workflows/deploy-server.yml`. It copies the code to cPanel over SSH and restarts the app. Add these repository secrets: `CPANEL_SSH_HOST`, `CPANEL_SSH_PORT`, `CPANEL_USER`, `CPANEL_APP_PATH` and `CPANEL_SSH_KEY`. The `.env` file on the server is never overwritten.
+## 2. Settings in `config.json`
 
-## Troubleshooting
-
-| Problem | What to check |
+| Setting | Purpose |
 |---|---|
-| Changes do not appear in the game | Reload the page. If it persists, check that the latest commit deployed in the Actions tab. |
-| The language list has only English | `textFileset` is still a `REPLACE_` placeholder in `config.json`. |
-| Passage text does not load | The fileset is missing from `ALLOWED_FILESETS`, or `ALLOWED_ORIGINS` does not match the game address. |
-| Browser shows a CORS error | `ALLOWED_ORIGINS` must match the game address exactly, including `https`. |
-| Server returns 403 | The fileset ID is not in `ALLOWED_FILESETS`. |
+| `app` | The app name and tagline. |
+| `api.base` | The address of the media server, used only when audio or video is set up. Leave the placeholder until then. |
+| `media` | The paths to audio and video on the media server, for example `echoAudio`, `covenantAudio`, `whoSaidAudio`, `memoryAudio`, `sceneVideo`. Replace the `REPLACE_..._FILESET` placeholders when you have a fileset. |
+| `features` | Switches each media type on or off: `text`, `audio`, `video`. Keep `audio` and `video` as `false` until their content is ready. While they are `false`, their formats show as **Coming soon**. |
+| `staticAudio` | Set to `true` only when audio was downloaded at build time and the licence allows it. |
+| `staticText` | Used by the older build-time text download. The Bible chooser does not use it. |
+| `bibleBrain` | Optional, and used by the older build-time text download. The chooser in the app asks Bible Brain directly. |
 
-## Text-only setup (no server needed)
+---
 
-See the section 'Choosing countries, languages and versions' below for the menu structure.
+## 3. The built-in English Bible
 
-This is the recommended starting point. Bible text is downloaded once, during the GitHub Pages build, and published with the game. The key is used only during the build, and no server is required.
+The King James Version is **committed** in `default-bible/en-kjv.json.gz`. It is made from the USX files with `scripts/usx_to_default_bible.py`, and it needs no key.
 
-1. In **Settings > Secrets and variables > Actions > Secrets**, add `BIBLE_BRAIN_KEY`.
-2. In **Settings > Secrets and variables > Actions > Variables**, add `DOWNLOAD_TEXT` with the value `true`.
-3. Edit `bible-catalog.json`. This lists the countries, languages and versions players can choose. Each version's `id` is its Bible Brain **text** fileset ID. Set `enabled` to `true` for each version to publish, and `scope` to `games` (only the chapters the games use) or `full` (the whole Bible).
-4. Edit `game-chapters.json` if you want to change the chapters the games use.
-5. Push to `main`. The build downloads the enabled versions into `text/`, and writes `text/catalog.json`, which the game reads for its Country, Language and Version choices. Only versions that downloaded successfully appear.
+Leave the repository variable **`DOWNLOAD_DEFAULT_BIBLE` unset**. The step that downloads it from Bible Brain at build time is not needed, and would overwrite the committed file.
 
-The build stops with a clear message if Bible Brain returns an error, or if the verse fields are not as expected. The script checks the field names on the first chapter, so the first run shows whether they need adjusting.
+---
 
-**Before publishing text:** Bible Brain text is published as public files. Check the licence for each language and version, and whether attribution is required. Bible Brain's copyright endpoint (`bibles/{bibleId}/copyright`) gives the text to display.
+## 4. Optional build steps
 
-**Adding versions and countries:** Add an entry under the right country and language in `bible-catalog.json`, set `enabled` to `true`, and push. Each full Bible is roughly 1,189 small files, so check the size reported in the build log. The build stops at 900 MB (`MAX_MB`).
+These are controlled by **repository variables** (**Settings > Secrets and variables > Actions > Variables**) and one **secret**.
 
-**How players use it:** On the home page, players choose a Country, then a Language, then a Version. Echo shows the passage in the version they chose, and names the version above the text. Other games use the built-in English text for now.
+| Name | Type | Effect | Recommended |
+|---|---|---|---|
+| `BIBLE_BRAIN_KEY` | Secret | The key used by build steps that call Bible Brain. | Set only if you use a build step below. |
+| `DOWNLOAD_AUDIO` | Variable | Downloads the chapters listed in `offline-audio.json` at build time, and publishes them as public files. | Off, unless the licence allows public audio. |
+| `DOWNLOAD_TEXT` | Variable | Runs the older build-time text download. The current chooser does not read its output. | **Leave unset.** |
+| `DOWNLOAD_DEFAULT_BIBLE` | Variable | Re-downloads the KJV at build time. | **Leave unset.** |
 
-### Coming soon: audio and video
+Players do not need a key for the game. The key is only needed by the person who downloads a Bible in the app, and by the optional build steps.
 
-Audio and video are not connected yet. In `config.json`, `features.audio` and `features.video` are `false`. While they are off:
-- the Audio and Video filters show a "Coming soon" note;
-- audio and video formats on game pages are shown as disabled, with a "Coming soon" label;
-- the games still play in their text formats.
+---
 
-When audio or video content is ready, set the matching feature to `true`. For audio, the options are the build-time audio download (section 5) or the media server (section 3). Video needs a film clip link in `config.json`.
+## 5. Audio and video
 
+Audio and video are off by default. Two routes are available.
 
-### Choosing countries, languages and versions
+**Route A: audio published at build time (simplest, public files).**
+1. Set the secret `BIBLE_BRAIN_KEY`.
+2. List the chapters in `offline-audio.json`.
+3. Set `DOWNLOAD_AUDIO` to `true`, and `staticAudio.enabled` to `true` in `config.json`.
+4. Set `features.audio` to `true`.
 
-Players choose a **country**, then a **language**, then a **version** on the home page. The menus come from `text/catalog.json`, which the build creates from `bible-catalog.json`:
+Anyone can download files published this way, so check the licence first.
 
-```json
-{
-  "countries": [
-    { "code": "IN", "name": "India", "languages": [
-        { "code": "ml", "name": "Malayalam", "versions": [
-            { "name": "Malayalam Bible (Version 1)", "fileset": "<Bible Brain fileset ID>" } ] } ] }
-  ],
-  "chapters": ["LUK:15", "JHN:3", "GEN:22"]
-}
-```
+**Route B: a media server (keeps the Bible Brain key on the server).**
+1. Run the media proxy in `wordplay-server` on a host with Node.js 18 or later (for example a cPanel Node.js app, Render, or a Cloudflare Worker).
+2. Set `BIBLE_BRAIN_KEY` and `ALLOWED_ORIGINS` (your game address, with no trailing slash) as environment variables on that host. The key is never placed in the game.
+3. Set `api.base` in `config.json` to the server address, and fill in the `media` paths with the filesets you use.
+4. Set `features.audio` and `features.video` to `true` when the content works.
 
-- Each **version** has a Bible Brain text fileset ID. Versions with a `REPLACE_...` placeholder are skipped.
-- The same fileset can appear under several countries. It is downloaded only once.
-- A version is shown in the menus only if at least one of its chapters was downloaded.
-- `chapters` lists every chapter the games use. Each chapter is downloaded for every version, so keep the list to what the games need.
-- Book codes follow Bible Brain (for example `LUK`, `JHN`, `1CO`, `PHP`).
+The media server's README explains its routes and the `ALLOWED_FILESETS` list.
 
-**Size:** each chapter is roughly 5 to 15 KB per version. Ten versions with 100 chapters is about 10 MB, well within GitHub Pages' limit. The build stops at 800 MB by default (`MAX_MB`).
+**Video:** each video needs its own licence. Set `sceneVideo` in `media`, and the Covenant clip paths, then set `features.video` to `true`.
 
-**Testing the build:** run it with `DOWNLOAD_TEXT` set to `true` and check the Actions log. It prints each chapter it saves and the final catalogue summary.
+---
+
+## 6. Bible Brain and the Bible chooser
+
+Players do not need the server for the chooser. Each player types their own free Bible Brain key in the app. The key is kept in memory for the session, and is sent only to Bible Brain.
+
+What the chooser uses from Bible Brain:
+- `/countries`: all countries.
+- `/languages?country=…`: the languages for a country.
+- `/bibles?language_code=…`: the Bibles for a language, keeping those with text filesets (`text_plain` or `text_json`).
+- `/bibles/filesets/{fileset}/{book}/{chapter}`: the text of each chapter, downloaded one chapter at a time.
+
+Bible Brain's terms apply to every Bible a player downloads.
+
+---
+
+## 7. Checks before publishing
+
+- Open the Pages address on a phone and on a computer. Play one game in each category.
+- Check the **Actions** tab for a green tick.
+- Check that the English passage shows in Echo (the built-in KJV).
+- Check the licence of any Bible, audio or video you publish.
+- Have partner teams review the content.

@@ -1,15 +1,17 @@
 """
 Build-time Bible text download for Wordplay.
 
-Reads bible-catalog.json (the versions players can choose) and downloads every
-enabled version from Bible Brain into _site/text/<fileset>/<BOOK>/<chapter>.json.
-It also writes _site/text/catalog.json, listing only the versions that were
-actually downloaded, in the format the game's Bible picker reads.
+Reads bible-catalog.json. Each enabled version lists its text filesets per
+testament ("OT" and "NT"), or one complete fileset under "C". For every
+chapter it picks the right fileset, downloads the chapter from Bible Brain,
+and writes _site/text/<fileset>/<BOOK>/<chapter>.json.
+
+It also writes _site/text/catalog.json, which the game reads. It lists every
+configured version, with "available" set true only when its text was saved.
 
 Runs only when the repository variable DOWNLOAD_TEXT is "true".
-The key comes from the BIBLE_BRAIN_KEY secret and is never printed or saved.
+The key comes from BIBLE_BRAIN_KEY and is never printed or saved.
 """
-import copy
 import json
 import os
 import sys
@@ -26,7 +28,7 @@ PAUSE = float(os.environ.get("REQUEST_PAUSE", "0.25"))
 if not KEY:
     sys.exit("BIBLE_BRAIN_KEY secret is missing. Add it under Settings > Secrets and variables > Actions.")
 
-# Chapter counts for all 66 books (USFM codes)
+# (USFM code, chapter count) for all 66 books, in canon order
 BOOKS = [
     ("GEN",50),("EXO",40),("LEV",27),("NUM",36),("DEU",34),("JOS",24),("JDG",21),("RUT",4),("1SA",31),("2SA",24),
     ("1KI",22),("2KI",25),("1CH",29),("2CH",36),("EZR",10),("NEH",13),("EST",10),("JOB",42),("PSA",150),("PRO",31),
@@ -37,6 +39,10 @@ BOOKS = [
     ("1PE",5),("2PE",3),("1JN",5),("2JN",1),("3JN",1),("JUD",1),("REV",22),
 ]
 assert len(BOOKS) == 66 and sum(c for _, c in BOOKS) == 1189
+OT_CODES = {code for code, _ in BOOKS[:39]}
+
+def testament(code):
+    return "OT" if code in OT_CODES else "NT"
 
 def load(path):
     with open(path, encoding="utf-8") as f:
@@ -45,7 +51,7 @@ def load(path):
 catalog = load("bible-catalog.json")
 game_chapters = load("game-chapters.json").get("items", [])
 
-# Collect the enabled versions (a version may appear under more than one country)
+# Enabled versions, de-duplicated by version id
 enabled = {}
 for country in catalog.get("countries", []):
     for lang in country.get("languages", []):
@@ -59,21 +65,28 @@ def get_json(url):
     with urllib.request.urlopen(url, timeout=30) as r:
         return json.load(r)
 
-def chapters_for(scope):
+def wanted_chapters(scope):
     if scope == "full":
-        return [{"book": b, "chapter": c} for b, n in BOOKS for c in range(1, n + 1)]
-    return game_chapters
+        return [(b, c) for b, n in BOOKS for c in range(1, n + 1)]
+    return [(item["book"], int(item["chapter"])) for item in game_chapters]
+
+def fileset_for(version, code):
+    fs = version.get("filesets") or {}
+    return fs.get(testament(code)) or fs.get("C")
 
 total_bytes = 0
-downloaded = {}          # fileset id -> set of (book, chapter) written
+saved = {}           # version id -> number of chapters saved
 field_checked = False
 
-for fs, meta in enabled.items():
-    wanted = chapters_for(meta.get("scope", "games"))
-    print(f"== {meta.get('name', fs)} ({fs}): {len(wanted)} chapters")
-    downloaded[fs] = set()
-    for item in wanted:
-        book, ch = item["book"], int(item["chapter"])
+for vid, meta in enabled.items():
+    chapters = wanted_chapters(meta.get("scope", "games"))
+    print(f"== {meta.get('name', vid)}: {len(chapters)} chapters")
+    saved[vid] = 0
+    for book, ch in chapters:
+        fs = fileset_for(meta, book)
+        if not fs:
+            print(f"  skip {book} {ch}: no fileset for the {testament(book)} in {vid}")
+            continue
         url = f"{BASE}/bibles/filesets/{fs}/{book}/{ch}?" + urllib.parse.urlencode({"key": KEY, "v": 4})
         try:
             data = get_json(url)
@@ -105,13 +118,13 @@ for fs, meta in enabled.items():
         with open(out, "w", encoding="utf-8") as f:
             json.dump({"fileset": fs, "book": book, "chapter": ch, "verses": verses}, f, ensure_ascii=False)
         total_bytes += os.path.getsize(out)
-        downloaded[fs].add((book, ch))
+        saved[vid] += 1
         if total_bytes > MAX_MB * 1024 * 1024:
             sys.exit(f"Size limit of {MAX_MB} MB reached. Reduce the versions or chapters.")
         time.sleep(PAUSE)
-    print(f"   saved {len(downloaded[fs])} chapters")
+    print(f"   saved {saved[vid]} chapters")
 
-# Public catalogue: every configured version (not placeholders), marked as available when its text was downloaded
+# Public catalogue: every configured version (not placeholders), with its filesets and availability
 public = {"countries": []}
 for country in catalog.get("countries", []):
     c_out = {"code": country["code"], "name": country["name"], "languages": []}
@@ -121,7 +134,10 @@ for country in catalog.get("countries", []):
             vid = str(v.get("id", ""))
             if not vid or vid.startswith("REPLACE"):
                 continue
-            vs.append({"fileset": vid, "name": v["name"], "available": bool(downloaded.get(vid))})
+            entry = {"fileset": vid, "name": v["name"], "available": saved.get(vid, 0) > 0}
+            if v.get("filesets"):
+                entry["filesets"] = v["filesets"]
+            vs.append(entry)
         if vs:
             c_out["languages"].append({"code": lang["code"], "name": lang["name"], "versions": vs})
     if c_out["languages"]:
@@ -131,7 +147,7 @@ os.makedirs(os.path.join("_site", "text"), exist_ok=True)
 with open(os.path.join("_site", "text", "catalog.json"), "w", encoding="utf-8") as f:
     json.dump(public, f, ensure_ascii=False, indent=2)
 
-ok = sum(len(v) for v in downloaded.values())
+ok = sum(saved.values())
 print(f"Done: {ok} chapters, {total_bytes / 1048576:.1f} MB, {len(public['countries'])} countries in the public catalogue")
 if ok == 0:
     sys.exit("No chapters were downloaded. Check the fileset IDs and the key.")

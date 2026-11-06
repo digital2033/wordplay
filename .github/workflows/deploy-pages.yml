@@ -59,6 +59,8 @@ jobs:
           mkdir -p _site/icons
           cp index.html config.json manifest.webmanifest sw.js bible-catalog.json _site/
           cp icons/*.png _site/icons/
+          mkdir -p _site/default-bible
+          cp default-bible/en-kjv.json.gz _site/default-bible/
 
       - name: Download licensed audio for offline use (optional)
         if: vars.DOWNLOAD_AUDIO == 'true'
@@ -71,6 +73,12 @@ jobs:
         env:
           BIBLE_BRAIN_KEY: ${{ secrets.BIBLE_BRAIN_KEY }}
         run: python3 scripts/fetch_offline_text.py
+
+      - name: Embed the English King James Version (optional, built-in default Bible)
+        if: vars.DOWNLOAD_DEFAULT_BIBLE == 'true'
+        env:
+          BIBLE_BRAIN_KEY: ${{ secrets.BIBLE_BRAIN_KEY }}
+        run: python3 scripts/build_default_english.py
 
       - uses: actions/configure-pages@v5
 
