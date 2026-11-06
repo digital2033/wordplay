@@ -161,6 +161,13 @@ Before a release, also play one game on a real phone, install the app and open i
 
 ---
 
+## Analytics
+
+- `track(name, params)` sends an event only when `DB.settings.analytics === "yes"`. Events are sent by `loadAnalytics()`, which imports Firebase from gstatic (pinned in `FIREBASE_VERSION`) the first time.
+- Keep event parameters to game, format, level and points. Never add names, avatars or typed text.
+- Consent is asked once, on the home page (`consentCard()`). It can be changed on the Progress screen (`setAnalytics()`).
+- `firebase-config.json` holds the public Firebase web config. It is not a secret, but the API key must be restricted to the site address (see DEPLOYMENT.md).
+
 ## Known technical notes
 
 - `loadConfig()` reads `config.json` at start-up. If it cannot be read, the game still runs with its defaults.

@@ -1,0 +1,12 @@
+{
+  "note": "Firebase web configuration. These values identify the project; they are not secret. Restrict the API key to your site address in the Google Cloud console (API key > Website restrictions) so that other sites cannot use it. Analytics only runs after a player or parent agrees (see README, Privacy).",
+  "config": {
+    "apiKey": "AIzaSyDR0sAkV4IbSigkN4myaroNcPi4Gg3QlII",
+    "authDomain": "wordplay-bible.firebaseapp.com",
+    "projectId": "wordplay-bible",
+    "storageBucket": "wordplay-bible.firebasestorage.app",
+    "messagingSenderId": "183605446698",
+    "appId": "1:183605446698:web:18d0afa610dbe3b0b7db53",
+    "measurementId": "G-TB2M8Z2QF1"
+  }
+}

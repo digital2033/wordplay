@@ -2,6 +2,25 @@
 
 All notable changes to Wordplay are recorded here. Versions follow the form `major.minor`.
 
+## 1.9.0 - Anonymous analytics (opt-in) and personal status
+
+### Added
+- **Firebase Analytics, opt-in only.** A consent card on the home page asks players (or a parent or teacher) to choose **Yes** or **No thanks**. The choice can be changed on the Progress screen.
+- **Events:** `game_started` and `game_finished`, with game, format, level and points. No names, avatars or typed text are sent.
+- **Child-directed settings:** Google Signals and ad personalisation are off.
+- **Leaderboard status:** each player's level, points, games, streak, badges and modules on this device.
+- `firebase-config.json`: the public Firebase web configuration, separate from `config.json`.
+- `tests/analytics_check.py`: 12 checks, with Firebase replaced by a stand-in.
+
+### Changed
+- The privacy notice describes the opt-in sharing and the under-13 guidance.
+- The publishing workflow runs the analytics check, and publishes `firebase-config.json`.
+
+### Notes
+- The leaderboard stays on each device, as chosen.
+- Restrict the Firebase API key to your site's address, as set out in DEPLOYMENT.md.
+- The stand-in tests do not contact Firebase. Please check that the first real events arrive in the Firebase console after the first deployment.
+
 ## 1.8.0 - Ready for a pilot: licence, safety, storage, CI and cleanup
 
 ### Added

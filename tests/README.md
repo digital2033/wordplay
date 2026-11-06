@@ -13,6 +13,7 @@ These tests open Wordplay in a real Chromium browser and play through it.
    `python3 tests/deep_check.py` (a few minutes): runs every game, every format and every book that has questions, and checks each screen.
    `python3 tests/levels_check.py`: checks Easy, Medium and Hard.
    `python3 tests/safety_check.py`: checks escaping, storage warnings, damaged-data recovery, export and the skip link.
+   `python3 tests/analytics_check.py`: checks consent, events (no names), child-directed settings, and that the game works if Firebase is unreachable. Firebase is replaced by a stand-in, so no real data is sent.
 
 To test a published site instead of a local one, set `WORDPLAY_URL`, for example
 `WORDPLAY_URL=https://<your-account>.github.io/wordplay/ python3 tests/browser_check.py`.

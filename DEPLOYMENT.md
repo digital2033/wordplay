@@ -78,3 +78,17 @@ The GitHub Actions file for the server is kept as `media-server/deploy-server.wo
 - Check the English passage in Echo (the built-in King James Version).
 - Check the licence of any audio, video or Bible you add.
 - Have partner teams review the content (see the content disclaimer in the README).
+
+---
+
+## 6. Analytics (Firebase), setting it up
+
+Analytics is optional, opt-in, and anonymous. It is configured in `firebase-config.json`.
+
+1. In the Firebase console, open your project (`wordplay-bible`) and enable **Google Analytics** for the web app.
+2. In **Google Cloud console > APIs & Services > Credentials**, open the web API key and set **Website restrictions** to `https://<your-account>.github.io/*`, so that other sites cannot use it. The key is public by design; this restriction is what protects it.
+3. In **Google Analytics > Admin > Data settings**, set the data retention period (for example 2 months), and turn off **Google signals**.
+4. Confirm the child-directed settings are in the game code (`allow_google_signals: false`, `allow_ad_personalization_signals: false`). Keep the privacy notice in the README up to date.
+5. Check that the **Analytics** event stream shows `game_started` and `game_finished` after you agree in the app.
+
+**Before publishing to children:** have the privacy notice reviewed for your country (for example COPPA in the United States, and the UK Children's code or GDPR in Europe).

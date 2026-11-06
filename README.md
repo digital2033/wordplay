@@ -156,7 +156,13 @@ Once installed, the game screens and the built-in King James Version open **with
 
 ## Privacy and data
 
-Wordplay has no accounts on a server and sends no analytics. Your progress stays on your device.
+- **Your progress stays on your device.** Profiles, points, history and the leaderboard are stored in your browser. There are no accounts on a server.
+- **Anonymous usage sharing is off until you agree.** The first time you open the home page, you can choose **Yes** or **No thanks**. You can change your choice on the Progress screen at any time.
+- **What is shared, if you agree:** which game and format was started or finished, the level, and the points earned by that game. Names, avatars and anything typed are never sent.
+- **Under 13:** please ask a parent or teacher before you agree.
+- **Where it goes:** Google Analytics, through Firebase, for the project owner to see totals. Google Signals and ad personalisation are switched off.
+- **Bible Brain:** the key you type for Bible downloads is used only to fetch the text, and is not saved. Bible text is stored on your device.
+- **Export or delete:** use **Export my progress** to keep a copy of your progress. Clearing the site's data in your browser removes everything on the device.
 
 - **No accounts on a server.** Profiles, points, history and the leaderboard are stored on the device.
 - **Bible Brain keys** are typed by the player for their own downloads. They are kept in memory, are not saved, and are sent only to Bible Brain.

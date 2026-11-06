@@ -31,7 +31,7 @@ jobs:
 
       - name: Validate JSON and gzip files
         run: |
-          for f in config.json manifest.webmanifest offline-audio.json content/*.json; do
+          for f in config.json firebase-config.json manifest.webmanifest offline-audio.json content/*.json; do
             python3 -m json.tool "$f" > /dev/null && echo "ok $f"
           done
           gzip -t default-bible/en-kjv.json.gz && echo "ok default-bible/en-kjv.json.gz"
@@ -67,6 +67,7 @@ jobs:
           python3 tests/levels_check.py
           python3 tests/deep_check.py
           python3 tests/safety_check.py
+          python3 tests/analytics_check.py
 
   deploy:
     needs: test
@@ -81,7 +82,7 @@ jobs:
       - name: Prepare the site folder (only public files)
         run: |
           mkdir -p _site/icons _site/default-bible _site/content
-          cp index.html config.json manifest.webmanifest sw.js _site/
+          cp index.html config.json firebase-config.json manifest.webmanifest sw.js _site/
           cp icons/*.png _site/icons/
           cp default-bible/en-kjv.json.gz _site/default-bible/
           cp content/*.json _site/content/

@@ -785,6 +785,7 @@ let pickingModule = 0;
 
 /* Records a finished module and shows the reward screen */
 function finishModule(name, head, max, hh){
+  track("game_finished", { game: name, level: levelName(), head: head, max: max });
   const p = activePlayer();
   const before = earnedBadges(statsFor(p.id));
   const heart = !!(hh && hh.heart);
@@ -848,7 +849,7 @@ function showProgress(){
       ${history.length ? `<table><thead><tr><th>Date</th><th>Game</th><th>Book</th><th>${T("points")}</th></tr></thead><tbody>
         ${history.map(s => `<tr><td>${new Date(s.date).toLocaleDateString()}</td><td>${escapeHtml(s.module)}</td><td>${escapeHtml(s.book)}</td><td><span class="score">+${s.points}</span></td></tr>`).join("")}
       </tbody></table>` : `<p class="muted">${T("noHistory")}</p>`}
-      <div style="margin-top:10px"><button class="alt" onclick="exportProgress()">Export my progress</button> <button class="alt" onclick="clearHistory()">${T("clearHistory")}</button></div>
+      <div style="margin-top:10px"><button class="alt" onclick="exportProgress()">Export my progress</button> <button class="alt" onclick="setAnalytics(analyticsOn() ? 'no' : 'yes')">Anonymous usage sharing: ${analyticsOn() ? 'on' : 'off'}</button> <button class="alt" onclick="clearHistory()">${T("clearHistory")}</button></div>
     </div>`;
   paintHeader();
 }
@@ -869,6 +870,7 @@ function showBoard(){
     <div class="card">
       <span class="badge b-game">${T("board")}</span>
       <h2>${T("rank")} ${myRank || "-"}</h2>
+      ${statusCard(me)}
       <p class="muted">${T("boardNote")}</p>
       ${rows.length ? `<table><thead><tr><th>${T("rank")}</th><th>Player</th><th>${T("level")}</th><th>${T("games")}</th><th>${T("points")}</th></tr></thead><tbody>
         ${rows.map((r,i) => `<tr style="${r.p.id===me?'font-weight:700;color:var(--accent)':''}"><td>${i+1}</td><td>${avatarHTML(r.p.avatar)} ${escapeHtml(r.p.name)}</td><td>${r.level.icon} ${r.level.name}</td><td>${r.games}</td><td>${r.points}</td></tr>`).join("")}
@@ -2212,6 +2214,7 @@ function home(){
       <div class="chips">${Object.keys(DIFFICULTY).map(k => `<button class="chip ${levelName() === k ? "on" : ""}" onclick="setLevel('${k}')">${DIFFICULTY[k].label}</button>`).join("")}</div>
       <p class="muted" style="font-size:.8rem">Easy: 5 lives, 3 options, shorter puzzles, and Echo key points. Medium: 3 lives. Hard: 1 life, no lifelines, the longest puzzles, and double Head points.</p>
       <p class="muted" style="font-size:.8rem">Content is written for learning and is being reviewed by partners. Check any passage against your own Bible. Bible text: King James Version (public domain).</p>
+      ${consentCard()}
       <h2>Games</h2>
       <div class="chips">
         <button class="chip" data-f="all" onclick="setFilter('all')">All</button>
@@ -2260,6 +2263,7 @@ function pickFormat(k){
   renderDetail();
 }
 function playGame(){
+  track("game_started", { game: GAMES[pickingGame].title, format: typeof pickingFormat !== "undefined" ? pickingFormat : "", level: levelName() });
   if(GAMES[pickingGame].noBook) return startModule("Genesis");
   renderBookPicker();
 }
@@ -2359,7 +2363,65 @@ function runMemoryAudio(){
   document.getElementById("mva-go").onclick = () => runMemoryText();
 }
 
-  /* ===== DIFFICULTY LEVELS: Easy, Medium, Hard ===== */
+  /* ===== ANONYMOUS ANALYTICS (Firebase), only after the player or a parent agrees =====
+   Events never contain names, avatars, or anything typed by a player. */
+const FIREBASE_VERSION = "10.12.2";
+function analyticsOn(){ return DB.settings.analytics === "yes"; }
+function loadAnalytics(){
+  if(!analyticsOn()) return Promise.resolve(null);
+  if(window.__analytics) return Promise.resolve(window.__analytics);
+  if(!window.__analyticsLoading){
+    window.__analyticsLoading = fetch("firebase-config.json", { cache: "no-cache" })
+      .then(r => { if(!r.ok) throw new Error("no config"); return r.json(); })
+      .then(cfg => Promise.all([
+        import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-app.js`),
+        import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-analytics.js`)
+      ]).then(([appMod, anaMod]) => {
+        const app = appMod.initializeApp(cfg.config);
+        // child-directed settings: no Google Signals and no ad personalisation
+        const instance = anaMod.getAnalytics(app, { config: { allow_google_signals: false, allow_ad_personalization_signals: false } });
+        window.__analytics = { mod: anaMod, instance };
+        return window.__analytics;
+      }))
+      .catch(() => null);
+  }
+  return window.__analyticsLoading;
+}
+function track(name, params){
+  if(!analyticsOn()) return;
+  loadAnalytics().then(a => { if(a) a.mod.logEvent(a.instance, name, params || {}); });
+}
+function setAnalytics(v){
+  DB.settings.analytics = v; saveDB();
+  if(v === "yes") loadAnalytics();
+  toast(v === "yes" ? "Thank you. Anonymous usage sharing is on." : "Anonymous usage sharing is off.");
+  if(!document.getElementById("stage").querySelector(".card")) return;
+  home();
+}
+function consentCard(){
+  if(DB.settings.analytics === "yes" || DB.settings.analytics === "no") return "";
+  return `<div class="card" role="region" aria-label="Anonymous usage">
+    <h3>Help improve Wordplay?</h3>
+    <p class="muted">We can count which games are played, at which level, and the points earned. We never record names or anything players type. Players under 13 should ask a parent or teacher first.</p>
+    <button onclick="setAnalytics('yes')">Yes, share anonymous usage</button>
+    <button class="alt" onclick="setAnalytics('no')">No thanks</button>
+  </div>`;
+}
+function statusCard(pid){
+  const p = DB.players[pid]; if(!p) return "";
+  const st = statsFor(pid), li = levelInfo(st.points), earned = earnedBadges(st);
+  return `<div class="card">
+    <h3>${avatarHTML(p.avatar)} ${escapeHtml(p.name)}: your status on this device</h3>
+    <p>${li.cur.icon} <strong>${li.cur.name}</strong> - <span class="score">${st.points}</span> ${T("points")}</p>
+    <div class="stats">
+      <div class="stat"><b>${st.games}</b>${T("games")}</div>
+      <div class="stat"><b>${st.streak}</b>${T("streak")}</div>
+      <div class="stat"><b>${earned.length}/${BADGES.length}</b>Badges</div>
+      <div class="stat"><b>${st.modules}/10</b>Modules</div>
+    </div></div>`;
+}
+
+/* ===== DIFFICULTY LEVELS: Easy, Medium, Hard ===== */
 const DIFFICULTY = {
   easy:   { label:"Easy",   lives:5, lifelines:1, hints:1, options:3, words:6,  blanks:2,  echoHints:true,  bonus:1 },
   medium: { label:"Medium", lives:3, lifelines:1, hints:1, options:4, words:8,  blanks:99, echoHints:false, bonus:1.5 },
