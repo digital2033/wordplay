@@ -1,11 +1,12 @@
 """
-Discovery step for the Bible Brain catalogue (countries, languages, versions).
+Discovery step for the Bible Brain catalogue.
 
-Calls the Bible Brain endpoints the catalogue would use, and saves a SMALL sample
-of each response to discovery/, so the real field names and filters can be checked
-before the game is built around them. Run it manually from the Actions tab.
+Round 5: find the real language IDs and text filesets for English and Malayalam
+by listing every language in the US and India, matching ISO codes on our side,
+and then listing each language's Bibles and their filesets.
 
-The key comes from BIBLE_BRAIN_KEY and is never saved. Saved URLs have the key removed.
+Saves small, key-free summaries to discovery/. Run manually from the Actions tab.
+The key comes from BIBLE_BRAIN_KEY and is never saved.
 """
 import json
 import os
@@ -19,53 +20,81 @@ BASE = os.environ.get("BIBLE_BRAIN_BASE", "https://4.dbt.io/api")
 if not KEY:
     sys.exit("BIBLE_BRAIN_KEY secret is missing.")
 
-ENDPOINTS = [
-    # Round 4: confirm the TEXT chapter route (the audio route is already confirmed)
-    ("text_chapter_engkjv", "/bibles/filesets/ENGKJV/GEN/1", {}),
-    ("text_chapter_luke", "/bibles/filesets/ENGKJV/LUK/15", {}),
-    ("text_chapter_malbcm", "/bibles/filesets/MALBCM/GEN/1", {}),
-    ("bibles_by_language_id_eng", "/bibles", {"language_id": "6414", "limit": "25"}),
-    ("languages_in_country_in", "/languages", {"country": "IN", "limit": "25"}),
-]
-
 os.makedirs("discovery", exist_ok=True)
 summary = {}
 
 def fetch(path, params):
-    q = dict(params, key=KEY, v=4)
-    url = f"{BASE}{path}?" + urllib.parse.urlencode(q)
-    safe_url = f"{BASE}{path}?" + urllib.parse.urlencode(params)   # key removed
+    url = f"{BASE}{path}?" + urllib.parse.urlencode(dict(params, key=KEY, v=4))
+    safe = f"{BASE}{path}?" + urllib.parse.urlencode(params)
     try:
         with urllib.request.urlopen(url, timeout=30) as r:
-            return r.status, json.load(r), safe_url
+            return r.status, json.load(r), safe
     except urllib.error.HTTPError as e:
-        return e.code, None, safe_url
+        return e.code, None, safe
     except Exception as e:
-        return None, str(e), safe_url
+        return None, str(e), safe
 
-for name, path, params in ENDPOINTS:
-    status, body, safe_url = fetch(path, params)
-    entry = {"url": safe_url, "status": status}
-    if isinstance(body, dict):
-        entry["top_level_keys"] = sorted(body.keys())
-        data = body.get("data")
-        if isinstance(data, list):
-            entry["count_in_page"] = len(data)
-            entry["first_item_keys"] = sorted(data[0].keys()) if data and isinstance(data[0], dict) else []
-            sample = data[:2]
-        else:
-            entry["data_type"] = type(data).__name__
-            sample = data
-        meta = body.get("meta")
-        if meta is not None:
-            entry["meta"] = meta
-        with open(os.path.join("discovery", f"{name}.sample.json"), "w", encoding="utf-8") as f:
-            json.dump({"url": safe_url, "sample": sample, "meta": meta}, f, ensure_ascii=False, indent=2)
-    elif body is not None:
-        entry["error"] = str(body)[:200]
-    summary[name] = entry
-    print(f"{name}: HTTP {status}, keys {entry.get('first_item_keys', entry.get('top_level_keys', []))}")
+def save(name, obj):
+    with open(os.path.join("discovery", f"{name}.json"), "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False, indent=2)
+
+def all_pages(path, params, limit=100, max_pages=10):
+    items, page = [], 1
+    while page <= max_pages:
+        status, body, safe = fetch(path, dict(params, limit=str(limit), page=str(page)))
+        if status != 200 or not isinstance(body, dict):
+            break
+        data = body.get("data") or []
+        items.extend(data)
+        if len(data) < limit:
+            break
+        page += 1
+    return items
+
+# 1. Languages in the US and India, matched by ISO code on our side
+langs = {}
+for cc in ("US", "IN"):
+    items = all_pages("/languages", {"country": cc})
+    langs[cc] = items
+    save(f"languages_{cc}_compact", [
+        {"id": x.get("id"), "iso": x.get("iso"), "name": x.get("name"),
+         "bibles": x.get("bibles"), "filesets": x.get("filesets")} for x in items])
+    summary[f"languages_{cc}"] = {"count": len(items)}
+
+def find(cc, iso):
+    return [x for x in langs.get(cc, []) if x.get("iso") == iso]
+
+targets = {"english": ("US", "eng"), "malayalam": ("IN", "mal")}
+found = {}
+for label, (cc, iso) in targets.items():
+    hits = find(cc, iso)
+    if not hits:  # English is sometimes listed under India or elsewhere; search both lists
+        hits = find("IN" if cc == "US" else "US", iso)
+    found[label] = hits[0] if hits else None
+    summary[f"{label}_language"] = found[label] and {"id": found[label].get("id"), "iso": iso, "name": found[label].get("name")} or "NOT FOUND"
+
+# 2. For each language found, list its Bibles and text filesets
+for label, rec in found.items():
+    if not rec:
+        continue
+    bibles = all_pages("/bibles", {"language_id": str(rec["id"])}, limit=100, max_pages=3)
+    rows = []
+    for b in bibles:
+        fsets = (b.get("filesets") or {}).get("dbp-prod") or []
+        rows.append({
+            "abbr": b.get("abbr"), "name": b.get("name"), "vname": b.get("vname"),
+            "text_filesets": [{"id": f.get("id"), "type": f.get("type"), "size": f.get("size")}
+                              for f in fsets if str(f.get("type", "")).startswith("text")],
+        })
+    save(f"{label}_bibles", rows)
+    summary[f"{label}_bibles"] = {"count": len(rows),
+                                  "with_text": sum(1 for r in rows if r["text_filesets"])}
+
+# 3. Confirm the text chapter route for the English KJV (already known to work)
+status, body, safe = fetch("/bibles/filesets/ENGKJV/JHN/3", {})
+summary["check_text_route_ENGKJV"] = {"status": status,
+                                      "verse_fields": sorted(body["data"][0].keys()) if status == 200 and body.get("data") else None}
 
 with open(os.path.join("discovery", "summary.json"), "w", encoding="utf-8") as f:
     json.dump(summary, f, ensure_ascii=False, indent=2)
-print("Saved discovery/ (download it from the workflow artifacts)")
+print(json.dumps(summary, ensure_ascii=False, indent=2))

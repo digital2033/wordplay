@@ -8,7 +8,8 @@ All notable changes to Wordplay are recorded here. Versions follow the form `maj
 - Country-to-language link: `/languages?country=XX` returns the languages spoken in a country, with Bible and fileset counts.
 - Filter by language ID works: `/bibles?language_id=N`. The ISO filter `/bibles?iso=` does not, and returns Bibles in other languages.
 - Audio chapter route confirmed: `/bibles/filesets/{fileset}/{book}/{chapter}` returns a signed `path` to the audio file, as the media server expects.
-- Text chapter route: not yet confirmed. The next round tests it with a text fileset.
+- Text chapter route confirmed: `/bibles/filesets/{fileset}/{book}/{chapter}` returns `verse_start` and `verse_text` for text filesets (ENGKJV confirmed).
+- The Malayalam fileset `MALBCM` returned 404, so it is not a valid text fileset ID. The English language ID used earlier (6414) returned no Bibles. The next discovery run finds both by ISO code.
 
 
 ### Found in the first discovery run
