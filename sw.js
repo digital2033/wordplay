@@ -2,7 +2,7 @@
    Caches the game shell so it opens offline. Audio and text from the
    media proxy (/api/...) are always fetched live and never cached here.
    Bump CACHE_VERSION on every release so players receive the update. */
-const CACHE_VERSION = "wordplay-v3";
+const CACHE_VERSION = "wordplay-v6";
 const SHELL = [
   "./",
   "./index.html",
@@ -12,7 +12,7 @@ const SHELL = [
   "./icons/icon-512.png"
 ];
 // The embedded English Bible is cached when present; a missing file must not stop the app installing.
-const OPTIONAL = ["./default-bible/en-kjv.json.gz"];
+const OPTIONAL = ["./default-bible/en-kjv.json.gz", "./content/generated-bank.json", "./content/extra-bank.json"];
 
 self.addEventListener("install", event => {
   event.waitUntil(

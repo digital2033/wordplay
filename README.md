@@ -10,7 +10,8 @@ Wordplay runs in any modern web browser. Once it is installed, it opens and work
 
 1. [The games](#the-games)
 2. [Finding and playing a game](#finding-and-playing-a-game)
-3. [Scoring, progress and rewards](#scoring-progress-and-rewards)
+3. [Difficulty levels](#difficulty-levels)
+4. [Scoring, progress and rewards](#scoring-progress-and-rewards)
 4. [Bible text](#bible-text)
 5. [Audio and video (coming soon)](#audio-and-video-coming-soon)
 6. [Languages](#languages)
@@ -65,6 +66,24 @@ Tap a game to open its **game page**. It explains the game, lists how to play, a
 
 ---
 
+## Difficulty levels
+
+Choose **Easy**, **Medium** or **Hard** on the home page. The level applies to every game.
+
+| Setting | Easy | Medium | Hard |
+|---|---|---|---|
+| Lives (Bible Trivia, Bible Characters) | 5 | 3 | 1 |
+| Options in multiple choice (Bible Trivia, Who Said It) | 3 | 4 | 4 |
+| Lifelines 50:50 and Hint (Bible Trivia) | Yes | Yes | No |
+| Word count in Bible Crossword and Word Search | 6 | 8 | 10 |
+| Blanks in Memory Verse | 2 | All | All |
+| Echo key points shown before retelling | Yes | No | No |
+| Head points multiplier | x1 | x1.5 | x2 |
+
+The level is saved with each game in your history. Hard is for groups who know Scripture well. Easy suits beginners and children.
+
+---
+
 ## Scoring, progress and rewards
 
 Every completed game earns points:
@@ -72,7 +91,7 @@ Every completed game earns points:
 | Part | Points |
 |---|---|
 | **Attendance** (completing a game) | 5 |
-| **Head** (your score in the game, such as correct answers or words found) | varies |
+| **Head** (your score in the game, such as correct answers or words found), multiplied by your level (x1 Easy, x1.5 Medium, x2 Hard) | varies |
 | **Heart** (finishing the reflection; the content is never scored) | 2 |
 | **Hands** (completing the mission) | 3 |
 
@@ -137,6 +156,8 @@ Once installed, the game screens and the built-in King James Version open **with
 
 ## Privacy and data
 
+Wordplay has no accounts on a server and sends no analytics. Your progress stays on your device.
+
 - **No accounts on a server.** Profiles, points, history and the leaderboard are stored on the device.
 - **Bible Brain keys** are typed by the player for their own downloads. They are kept in memory, are not saved, and are sent only to Bible Brain.
 - **Downloaded Bible text** is stored in the browser on the device.
@@ -146,14 +167,41 @@ To remove everything, clear the site's data in the browser settings, or uninstal
 
 ---
 
+## Content and accuracy
+
+Wordplay is a learning tool. Its questions, clues, passages and summaries are written or generated from the Bible text, and they are being reviewed by partner teams. They may contain errors, and they are not an official study resource.
+
+- Check any passage or answer against your own Bible before you use it with a group.
+- Questions that were generated from the text test wording and reference, not deep knowledge.
+- Theological accuracy of each item has not yet been signed off. Please report any error through the project's issue tracker.
+
+---
+
 ## Known limits
 
 - Only **Echo** uses the chosen Bible text. The other games use built-in English.
 - **Audio and video** are not yet connected.
 - **Game content** (questions, clues and summaries) is in English and needs translation and review by a Bible scholar and native speakers before wide use.
+- **Question coverage by book (current):**
+
+  | Game | Books with questions |
+  |---|---|
+  | Memory Verse | 66 |
+  | Bible Trivia | 66 (3 John has nine questions; one comes from another book) |
+  | Who Said It | 22 (generated from the text) |
+  | Echo | 30 |
+  | Bible Characters | 40 |
+  | Bible Crossword | 45 |
+  | Word Search | 45 |
+  | Scene Detective | 4 |
+  | Story Builder | 1 (Luke) |
+  | Covenant Quest | Its 12 clips (no book choice) |
+
+  Memory Verse, Bible Trivia and Who Said It questions are generated from the King James text, so they test wording and reference rather than deep knowledge. Echo, Bible Characters, Bible Crossword, Word Search, Scene Detective and Story Builder are written by hand, and cover only the books listed above. Bible Characters includes Torah, Judges, Samuel, Kings, Chronicles and Ezra-Nehemiah, and Bible Crossword and Word Search cover all the Gospels, Acts and the Pauline letters. More books are added in batches. Books without questions for a game are greyed out in its book picker. Bible Characters has one to three characters per book, so a round can be short.
 - **Bible Brain downloads** take several minutes for a full Bible, because each chapter is requested separately.
 - **Leaderboards** rank the players on one device only.
 - **Sign-in** is choosing a player on the device. It is not password-protected.
+- **Progress is saved on the device only.** Use **Export my progress** on the Progress screen to keep a copy. If the browser storage is full, the game tells you.
 - **Bible Brain** must be used within its terms and the licence of each Bible.
 
 ---
@@ -163,6 +211,8 @@ To remove everything, clear the site's data in the browser settings, or uninstal
 - **[CHANGELOG.md](CHANGELOG.md):** what has changed in each version.
 - **[DEPLOYMENT.md](DEPLOYMENT.md):** publishing on GitHub Pages, optional build steps, audio and video, and the Bible Brain set-up.
 - **[DEVELOPER.md](DEVELOPER.md):** how the project is organised, the configuration, and how to add games, languages and content.
+- **[media-server/README.md](media-server/README.md):** the optional media proxy for streamed audio and video.
+- **[LICENSE](LICENSE):** the MIT licence.
 
 ---
 
@@ -173,4 +223,4 @@ To remove everything, clear the site's data in the browser settings, or uninstal
 - ***The Covenant* film:** the 12-clip structure and summaries of Covenant Quest are based on the film's script and clip guide.
 - **Icons and avatars:** drawn for Wordplay.
 
-**Licence:** not yet chosen. Until a licence is added, all rights are reserved by the project owner.
+**Licence:** MIT License. Copyright (c) 2026 Joshy Kurian. See [LICENSE](LICENSE). The software is provided as is, without warranty.

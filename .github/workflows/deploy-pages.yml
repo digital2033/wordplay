@@ -1,8 +1,9 @@
-name: Deploy Wordplay to GitHub Pages
+name: Test and deploy Wordplay to GitHub Pages
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -15,38 +16,61 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  validate:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate JSON files
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate JSON and gzip files
         run: |
-          python3 -m json.tool config.json > /dev/null
-          python3 -m json.tool manifest.webmanifest > /dev/null
-          python3 -m json.tool bible-catalog.json > /dev/null
-          python3 -m json.tool game-chapters.json > /dev/null
-          echo "JSON files are valid"
+          for f in config.json manifest.webmanifest offline-audio.json content/*.json; do
+            python3 -m json.tool "$f" > /dev/null && echo "ok $f"
+          done
+          gzip -t default-bible/en-kjv.json.gz && echo "ok default-bible/en-kjv.json.gz"
 
       - name: Make sure config.json holds no secrets
         run: |
           if grep -qiE '"(apikey|api_key|key|token|secret|password)"[[:space:]]*:' config.json; then
-            echo "::error::config.json contains a secret-like field. Remove it and keep keys on the server."
+            echo "::error::config.json contains a secret-like field."
             exit 1
           fi
-          echo "No secret-like fields found"
 
-      - name: Check game script syntax
+      - name: Check game and service worker syntax
         run: |
           python3 -c "import re; h=open('index.html',encoding='utf-8').read(); open('/tmp/game.js','w',encoding='utf-8').write(re.findall(r'<script>(.*?)</script>', h, re.S)[0])"
           node --check /tmp/game.js
-          echo "Game script syntax is valid"
+          node --check sw.js
 
-      - name: Check service worker syntax
-        run: node --check sw.js
+      - name: Question bank matches its sources
+        run: |
+          python3 scripts/merge_extra_content.py
+          git diff --exit-code content/extra-bank.json
+
+      - name: Install the browser for tests
+        run: |
+          pip install playwright
+          python3 -m playwright install --with-deps chromium
+
+      - name: Start the game locally and run the browser tests
+        run: |
+          python3 -m http.server 8800 > /tmp/http.log 2>&1 &
+          sleep 2
+          python3 tests/browser_check.py
+          python3 tests/levels_check.py
+          python3 tests/deep_check.py
+          python3 tests/safety_check.py
 
   deploy:
-    needs: validate
+    needs: test
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -56,29 +80,20 @@ jobs:
 
       - name: Prepare the site folder (only public files)
         run: |
-          mkdir -p _site/icons
-          cp index.html config.json manifest.webmanifest sw.js bible-catalog.json _site/
+          mkdir -p _site/icons _site/default-bible _site/content
+          cp index.html config.json manifest.webmanifest sw.js _site/
           cp icons/*.png _site/icons/
-          mkdir -p _site/default-bible
           cp default-bible/en-kjv.json.gz _site/default-bible/
+          cp content/*.json _site/content/
+          # Each deployment gets its own cache name, so players receive new content at once
+          sed -i "s/const CACHE_VERSION = \"[^\"]*\"/const CACHE_VERSION = \"wordplay-${GITHUB_SHA::8}\"/" _site/sw.js
+          grep -q "wordplay-${GITHUB_SHA::8}" _site/sw.js
 
-      - name: Download licensed audio for offline use (optional)
-        if: vars.DOWNLOAD_AUDIO == 'true'
+      - name: Download licensed audio for offline use (optional, both settings required)
+        if: vars.DOWNLOAD_AUDIO == 'true' && vars.AUDIO_LICENCE_CONFIRMED == 'true'
         env:
           BIBLE_BRAIN_KEY: ${{ secrets.BIBLE_BRAIN_KEY }}
         run: python3 scripts/fetch_offline_audio.py
-
-      - name: Download Bible text for offline use (optional)
-        if: vars.DOWNLOAD_TEXT == 'true'
-        env:
-          BIBLE_BRAIN_KEY: ${{ secrets.BIBLE_BRAIN_KEY }}
-        run: python3 scripts/fetch_offline_text.py
-
-      - name: Embed the English King James Version (optional, built-in default Bible)
-        if: vars.DOWNLOAD_DEFAULT_BIBLE == 'true'
-        env:
-          BIBLE_BRAIN_KEY: ${{ secrets.BIBLE_BRAIN_KEY }}
-        run: python3 scripts/build_default_english.py
 
       - uses: actions/configure-pages@v5
 

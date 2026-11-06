@@ -14,10 +14,12 @@ How the project is organised, and how to change it.
 | `sw.js` | Service worker: caches the app so it works offline. |
 | `icons/` | App icons (192 and 512 pixels). |
 | `default-bible/en-kjv.json.gz` | The embedded King James Version (built-in English). |
-| `bible-catalog.json` | Bible versions for the optional build-time downloads. |
-| `game-chapters.json` | The chapters used by the optional build-time text download. |
-| `offline-audio.json` | The chapters for the optional build-time audio download. |
+| `content/` | Question banks: `extra-bank.json` (hand-written, from `content/extra/`) and `generated-bank.json`. |
+| `media-server/` | Optional Node.js media proxy for audio and video (see DEPLOYMENT.md). |
+| `LICENSE` | MIT licence. |
+| `offline-audio.json` | The chapters for the optional, licence-gated audio download. |
 | `scripts/` | Build and conversion scripts (see below). |
+| `tests/` | Browser tests (Playwright, Chromium). Run by the publishing workflow. |
 | `.github/workflows/` | GitHub Actions: publishing, and the manual Bible Brain discovery check. |
 | `README.md` | The overview for players and partners. |
 | `DEPLOYMENT.md` | Publishing and the optional media set-up. |
@@ -95,6 +97,29 @@ Game content (questions, passages, clues) is not translated by the app. It needs
 
 ---
 
+## Hand-written content (content/extra)
+
+- One JSON file per batch of books in `content/extra/`, with three lists: `echo`, `chars` and `puzzles`.
+- Run `python3 scripts/merge_extra_content.py` after each change. It stops with a list of problems if a book name, reference, word or clue is wrong.
+- Word lists: capital letters A-Z only, 3 to 12 letters, at least 6 words, and no repeats. Put the most familiar words first, because Easy uses the first 6.
+- Each batch is checked in the browser with `tests/deep_check.py`.
+
+## Question banks for all 66 books
+
+- `scripts/build_question_bank.py` generates `content/generated-bank.json` from `default-bible/en-kjv.json.gz`. It writes Memory Verse items, Bible Trivia items (verse-based) and Who Said It items (where the verse names the speaker). Each item's `book` is the book name, and each item records its verse reference.
+- The app loads that file at start-up (`loadGeneratedBank()`), and adds the items to `MEMORY`, `BIBLE_QUIZ` and `WHO_SAID`. Games pick from the selected book with `pickOne()`, `pickMany()` and `quizDeck()`.
+- Re-run the script after changing the Bible text, then bump `CACHE_VERSION` in `sw.js`.
+- **Hand-written content** goes in `content/extra/*.json` (one file per batch of books), with three lists: `echo` (passages with story elements), `chars` (characters with clues) and `puzzles` (word lists with clues, shared by Bible Crossword and Word Search). Run `python3 scripts/merge_extra_content.py`. It checks every book name, reference, letter and clue, and writes `content/extra-bank.json`, which the app loads at start-up.
+- The book picker only offers books that have questions for the game (`booksWithContent()`), so new books appear automatically once they are added.
+- Other content still lives in the banks listed above (`ECHO`, `SCENE`, `COVENANT`, `STORY`, `BIBLE_CHARS`, `PUZZLE_BANK`). Add an entry with `book` set to the book name.
+
+## Difficulty levels
+
+- `DIFFICULTY` in `index.html` holds the settings for Easy, Medium and Hard: lives, lifelines, options, word counts, Memory Verse blanks, Echo key points and the points multiplier.
+- Read the current level with `lvl()`, and the level name with `levelName()`. Games use these; do not hard-code numbers in a game.
+- The level is stored in `DB.settings.level` and saved with each session in `DB.sessions`.
+- `LEVELS` is the rank list (Seedling to Champion). It is a different thing from `DIFFICULTY`.
+
 ## Bible text
 
 - **`default-bible/en-kjv.json.gz`** has this structure:
@@ -110,9 +135,9 @@ Game content (questions, passages, clues) is not translated by the app. It needs
 | Script | Purpose | Needs a key |
 |---|---|---|
 | `usx_to_default_bible.py` | Converts USX files to the embedded KJV file. | No |
-| `build_default_english.py` | Re-downloads the KJV from Bible Brain. Not needed now. | Yes |
-| `fetch_offline_audio.py` | Downloads audio chapters for the build (Route A in DEPLOYMENT.md). | Yes |
-| `fetch_offline_text.py` | The older build-time text download. Not read by the chooser. | Yes |
+| `merge_extra_content.py` | Checks and merges `content/extra/` into `content/extra-bank.json`. | No |
+| `build_question_bank.py` | Generates `content/generated-bank.json` from the embedded Bible. | No |
+| `fetch_offline_audio.py` | Downloads audio for the build (licence-gated; see DEPLOYMENT.md). | Yes |
 | `discover_bible_brain.py` | Manual check of the Bible Brain endpoints. Saves samples as an artifact. | Yes |
 
 Check a script before running it: `python3 -m py_compile scripts/<name>.py`.
@@ -121,17 +146,18 @@ Check a script before running it: `python3 -m py_compile scripts/<name>.py`.
 
 ## Checking the game before a release
 
-There is no automated test suite in the repository yet. Before a release, check:
+The publishing workflow runs these checks on every push:
 
-1. The JavaScript parses: copy the content of the `<script>` block into a file and run `node --check`.
-2. `config.json`, `bible-catalog.json`, `game-chapters.json` and `manifest.webmanifest` are valid JSON.
-3. Open the game in a browser, sign in, and play one game in each category.
-4. Check the answers list at the end of a game.
-5. Switch the Bible in Echo, and check that the built-in King James passage still shows.
-6. Install the app, go offline, and open it.
-7. Bump `CACHE_VERSION` in `sw.js` and record the change in `CHANGELOG.md`.
+1. JSON files and gzip files are valid, and `config.json` holds no secrets.
+2. The game script and the service worker parse.
+3. `content/extra-bank.json` matches `content/extra/` (run `python3 scripts/merge_extra_content.py`, then commit the result).
+4. The browser tests pass in headless Chromium:
+   - `tests/browser_check.py`: home page, filters, book pickers against their questions.
+   - `tests/levels_check.py`: Easy, Medium and Hard settings.
+   - `tests/deep_check.py`: every game, every format and every covered book.
+   - `tests/safety_check.py`: escaping, storage warnings, damaged-data recovery, export, skip link.
 
-Recommended: add a `tests/` folder with a headless browser test for these steps.
+Before a release, also play one game on a real phone, install the app and open it offline. Then bump nothing by hand: the deployment stamps the cache.
 
 ---
 
@@ -140,4 +166,5 @@ Recommended: add a `tests/` folder with a headless browser test for these steps.
 - `loadConfig()` reads `config.json` at start-up. If it cannot be read, the game still runs with its defaults.
 - The **Bible Brain key** is kept in a variable (`BB_KEY`) for the session only. Do not add it to `DB`, `localStorage` or any file.
 - The service worker caches same-origin requests, except `/api/` and `/media/`. Bible chapters downloaded by players are stored in IndexedDB, not in the service worker cache.
+- Progress is stored in `localStorage` under `wordplay.v1`. If saving fails, the player sees a warning. If the saved data cannot be read, it is kept under `wordplay.v1.damaged`.
 - Start-up errors are shown on the page by `showStartError()`, rather than as a blank screen.

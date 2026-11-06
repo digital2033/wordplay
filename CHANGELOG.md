@@ -2,6 +2,118 @@
 
 All notable changes to Wordplay are recorded here. Versions follow the form `major.minor`.
 
+## 1.8.0 - Ready for a pilot: licence, safety, storage, CI and cleanup
+
+### Added
+- **MIT licence** (`LICENSE`), linked from the README.
+- **Content disclaimer** on the home page and in the README: content is under partner review, and passages should be checked against the reader's own Bible.
+- **Export my progress** on the Progress screen: downloads a JSON copy of players and history.
+- **Storage warnings:** if progress cannot be saved, the player is told. If saved data cannot be read, it is kept as `wordplay.v1.damaged` and the player is told.
+- **Skip link** and **live region** for messages; labels for the Bible chooser controls.
+- **`tests/safety_check.py`:** checks escaping, storage warnings, damaged-data recovery, export and the skip link.
+- **`media-server/`:** the media proxy is now part of the project. It trusts one proxy by default (`TRUST_PROXY`), so the rate limit counts real visitors.
+- **CI:** the publishing workflow runs the JSON and syntax checks, the question-bank consistency check, and all browser tests in headless Chromium before it deploys.
+
+### Changed
+- Question text, memory-verse text, passage titles and session history are escaped before they are shown.
+- The service worker is stamped with the commit ID at each deployment, so players receive new content without a manual version bump.
+- Audio download needs **both** `DOWNLOAD_AUDIO` and `AUDIO_LICENCE_CONFIRMED` set to `true`.
+- The manifest declares the icons separately for `any` and `maskable`.
+- `config.json` no longer contains the settings the app does not read (`staticText`, `bibleBrain`).
+
+### Removed
+- `DOWNLOAD_TEXT` and `DOWNLOAD_DEFAULT_BIBLE`. Bible text is no longer published at build time, and the English Bible is committed.
+- `scripts/fetch_offline_text.py`, `scripts/build_default_english.py`, `bible-catalog.json` and `game-chapters.json`, which only the removed steps used.
+- 13 unused functions (the retired chooser and picker, `keepName` and `runOralQuiz`).
+
+### Verified
+- Basic browser checks: 35 of 35.
+- Levels: all checks pass.
+- Safety: 10 of 10.
+- Full pass: 728 game screens, no page errors. The only notice left is the known 3 John case.
+
+## 1.7.1 - Characters and word puzzles for the Gospels, Acts, the letters and the historical books
+
+### Added
+- `content/extra/05-torah-to-ezra.json`: 25 Bible Characters from Leviticus, Numbers, Judges, 1 and 2 Samuel, 1 and 2 Kings, 1 and 2 Chronicles, Ezra and Nehemiah (Aaron, Balaam, Korah, Deborah, Jephthah, Ehud, Eli, Jonathan, Goliath, Abigail, Joab, Mephibosheth, Ahab, Obadiah, Elisha, Naaman, Josiah, Jehu, Asaph, Jabez, Jehoshaphat, Uzziah, Manasseh, Ezra, Zerubbabel, Nehemiah), and word lists for Leviticus, 2 Kings, 1 and 2 Chronicles, Ezra and Nehemiah.
+- `content/extra/06-gospels-acts-pauline.json`: 20 Bible Characters from the Gospels, Acts, Romans and the letters (Herod the Great, Judas Iscariot, James son of Zebedee, Joseph of Arimathea, Martha, Herod Antipas, Caiaphas, Nathanael, Pontius Pilate, Cornelius, Ananias, Silas, Apollos, Philip, Aquila, Stephanas, Titus, Epaphras, Onesimus, Demas, Timothy, Eunice, Philemon), and word lists for 1 and 2 Corinthians, Colossians, 1 and 2 Thessalonians, 1 and 2 Timothy, Titus and Philemon.
+
+### Changed
+- Coverage: Bible Characters 40 books (was 27), Bible Crossword 45 (was 30), Word Search 45 (was 30).
+
+### Verified in a real browser (Chromium)
+- A full pass ran 728 game screens with no page errors. The only notice left is 3 John in Bible Trivia.
+- The basic browser checks pass 35 of 35.
+- Every new crossword places at least seven of its ten words. Titus places seven, so on Hard it will show a smaller grid.
+
+## 1.7.0 - Difficulty levels and 14 more books
+
+### Added
+- **Three difficulty levels** (Easy, Medium, Hard), chosen on the home page and applied to every game:
+  - lives: 5, 3 or 1;
+  - multiple choice: 3 options on Easy, 4 on Medium and Hard;
+  - lifelines (50:50 and Hint): on Easy and Medium, off on Hard;
+  - puzzles: 6, 8 or 10 words;
+  - Memory Verse: 2 blanks on Easy, all on Medium and Hard;
+  - Echo: key points shown on Easy;
+  - Head points multiplied by 1, 1.5 or 2. The level is saved in the history.
+- Hand-written content for 14 more books: Numbers, Deuteronomy, Esther, Daniel, Jonah, Job, Proverbs, Luke (word list and Mary), Galatians, Ephesians, Philippians, Hebrews, James and 1 Peter.
+- `tests/levels_check.py`: checks each level in a real browser.
+
+### Changed
+- Bible Crossword, Word Search and Bible Trivia use the level's settings.
+- Coverage: Echo 30 books (was 18), Bible Characters 27 (was 20), Bible Crossword 30 (was 16), Word Search 30 (was 16).
+
+### Verified in a real browser (Chromium)
+- The level checks show the expected lives, options, word counts, blanks and Echo hints, with no page errors.
+- A deep pass ran 642 game screens with no page errors. The only notice left is 3 John in Bible Trivia.
+- The basic browser checks pass 35 of 35.
+
+## 1.6.5 - More hand-written questions for more books
+
+### Added
+- `content/extra/`: hand-written content for 16 books (Genesis, Exodus, Joshua, Judges, Ruth, 1 Samuel, 2 Samuel, 1 Kings, Psalms, Isaiah, Matthew, Mark, John, Acts, Romans, Revelation):
+  - 16 Echo passages, with story elements and heart and mission prompts,
+  - 33 Bible Characters, with clues,
+  - 13 word lists for Bible Crossword and Word Search.
+- `scripts/merge_extra_content.py`: checks every book name, reference, letter and clue, and merges the files into `content/extra-bank.json`.
+
+### Changed
+- Echo picks its passage from the selected book.
+- Coverage now: Echo 18 books, Bible Characters 20, Bible Crossword 16, Word Search 16 (previously 2, 9, 3 and 3).
+
+### Verified in a real browser (Chromium)
+- The browser checks passed 35 of 35, with no page errors.
+- A deep pass ran 548 game screens (every game, every format and every covered book) with no page errors. The only notice left is for 3 John in Bible Trivia.
+- Every new crossword places at least seven of its ten words.
+
+## 1.6.4 - Book picker shows only books with questions
+
+### Changed
+- The book picker greys out (and disables) every book that has no questions for the chosen game. Each picker shows how many books have questions.
+- Scene Detective picks a scene from the selected book, and Bible Characters uses only the selected book's characters.
+
+### Added
+- `tests/browser_check.py` and `tests/deep_check.py`: browser tests (Chromium, via Playwright). The first checks the home page, filters, every book picker against its questions, and sample games. The second runs every game, every format and every covered book.
+
+### Verified in a real browser
+- 35 of 35 checks passed, with no page errors.
+- 442 game runs (every game, every format, every covered book) with no page errors. The only notice left is the 3 John trivia deck, which has nine questions.
+
+## 1.6.3 - Questions for all 66 books (Memory Verse and Bible Trivia)
+
+### Added
+- `scripts/build_question_bank.py` and `content/generated-bank.json`: questions for every book, generated from the embedded King James text. Memory Verse: 197 items, Bible Trivia: 1,037 items (all 66 books except 3 John, which has nine), Who Said It: 132 items for 22 books.
+- Each generated item records its verse reference.
+
+### Changed
+- Memory Verse, Bible Trivia and Who Said It choose questions from the selected book. The old fallback to the nearest book (for example, Jonah for Genesis) only applies to games and books with no content.
+- The publishing workflow publishes `content/`, and the service worker caches the question bank.
+
+### Known limits
+- The generated questions test wording and reference. Partner review is needed before wide use.
+- Echo, Scene Detective, Story Builder, Bible Characters, Bible Crossword and Word Search still have hand-written content for only some books.
+
 ## 1.6.2 - Documentation
 
 ### Added

@@ -104,9 +104,11 @@ textarea.tx-answers{min-height:44px}
 .chip:disabled{opacity:.6;cursor:not-allowed}
 .chip em{font-style:normal;font-size:.75rem;margin-left:4px}
 .sel{width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid rgba(127,127,127,.4);background:var(--bg);color:var(--ink)}
+.skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}.skip-link:focus{left:8px;top:8px;width:auto;height:auto;overflow:visible;z-index:99;background:#fff;color:#000;padding:8px 12px;border-radius:8px}
 </style>
 </head>
 <body>
+<a class="skip-link" href="#stage">Skip to the games</a>
 
 <header>
   <div class="hrow">
@@ -122,7 +124,7 @@ textarea.tx-answers{min-height:44px}
 <main>
   <div id="stage"></div>
 </main>
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script>
 /* Shows any start-up error on the page, instead of a blank screen */
@@ -561,11 +563,35 @@ function notice(picked){
    ============================================================ */
 const KEY = "wordplay.v1";
 function loadDB(){
-  try{ const raw = localStorage.getItem(KEY); if(raw) return JSON.parse(raw); }catch(e){}
+  let raw = null;
+  try{ raw = localStorage.getItem(KEY); }catch(e){}
+  if(raw){
+    try{ return JSON.parse(raw); }
+    catch(e){
+      // keep the unreadable copy so nothing is lost, and tell the player
+      try{ localStorage.setItem(KEY + ".damaged", raw); }catch(_){}
+      window.DB_DAMAGED = true;
+    }
+  }
   return { players:{}, sessions:[], activeId:null };
 }
 function saveDB(){
-  try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){}
+  try{ localStorage.setItem(KEY, JSON.stringify(DB)); window.STORAGE_WARNED = false; }
+  catch(e){
+    if(!window.STORAGE_WARNED){
+      window.STORAGE_WARNED = true;
+      toast("Could not save your progress on this device. Your browser storage may be full. Use Export my progress on the Progress screen.");
+    }
+  }
+}
+function exportProgress(){
+  const data = { exported: new Date().toISOString(), players: DB.players, sessions: DB.sessions };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "wordplay-progress-" + new Date().toISOString().slice(0, 10) + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 let DB = loadDB();
 DB.settings = DB.settings || { bibleLang: "en" };
@@ -735,7 +761,6 @@ function logout(){
   showProfile(true);
   toast("Signed out");
 }
-function keepName(){ const n = document.getElementById("pf-name"); if(n) n.dataset.keep = n.value; }
 function saveProfile(){
   const name = (document.getElementById("pf-name").value || "").trim();
   if(!name){ toast("Please enter your name"); return; }
@@ -752,78 +777,11 @@ document.addEventListener("input", e => { if(e.target && e.target.id === "pf-nam
 /* ============================================================
    HOME
    ============================================================ */
-function legacyShowHome(){
-  const p = activePlayer();
-  if(!p) return showProfile(true);
-  const st = statsFor(p.id), li = levelInfo(st.points);
-  const earned = earnedBadges(st);
-  const nextTxt = li.nxt ? `${T("nextLevel")}: ${li.nxt.icon} ${li.nxt.name} (${li.nxt.min - st.points} ${T("points")})` : T("topLevel");
-  document.getElementById("stage").innerHTML = `
-    <div class="card">
-      <span class="badge b-game">${T("home")}</span>
-      <h2>${avatarHTML(p.avatar)} ${escapeHtml(p.name)}</h2>
-      <p><strong>${li.cur.icon} ${li.cur.name}</strong> - <span class="score">${st.points}</span> ${T("points")}</p>
-      <div class="xp"><div style="width:${li.pct}%"></div></div>
-      <p class="muted">${nextTxt}</p>
-      <div class="stats">
-        <div class="stat"><b>${st.games}</b>${T("games")}</div>
-        <div class="stat"><b>${st.streak}</b>${T("streak")}</div>
-        <div class="stat"><b>${earned.length}/${BADGES.length}</b>${T("badges")}</div>
-      </div>
-      <p class="muted">🔥 ${T("dailyGoal")}</p>
-      <button onclick="go('play')">${T("play")}</button>
-      <button class="alt" onclick="go('progress')">${T("progress")}</button>
-      <button class="alt" onclick="go('board')">${T("board")}</button>
-    </div>`;
-  paintHeader();
-}
 
 /* ============================================================
    PLAY: module, then testament, then book
    ============================================================ */
-function legacyShowPlay(){
-  document.getElementById("stage").innerHTML = `
-    <div class="card"><span class="badge b-game">${T("play")}</span><h2>Choose a game</h2>
-      <div class="seg"><button class="${gameMode==='audio'?'on':''}" onclick="setMode('audio')">Audio games</button><button class="${gameMode==='text'?'on':''}" onclick="setMode('text')">Text games</button></div>
-      <p class="muted">Pick a module first, then the Bible book you want to play from.</p></div>
-    ${activeModules().map((m,i) => `
-      <div class="card">
-        <div class="icon">${ICONS[i]}</div>
-        <span class="badge ${m.cls}">${m.badge}</span>
-        <h3>${m.title}</h3>
-        <p class="muted">${m.desc}</p>
-        <button onclick="pickBook(${i})">${m.noBook ? "Start" : T("chooseBook")}</button>
-      </div>`).join("")}`;
-  paintHeader();
-}
 let pickingModule = 0;
-function legacyPickBook(i){
-  if(activeModules()[i].noBook){ pickingModule = i; return startModule("Genesis"); }
-  pickingModule = i;
-  renderBookPicker();
-}
-function legacyRenderBookPicker(){
-  const list = pickingTest === "OT" ? OT_BOOKS : NT_BOOKS;
-  document.getElementById("stage").innerHTML = `
-    <div class="card">
-      <span class="badge b-game">${activeModules()[pickingModule].title}</span>
-      <h2>${T("chooseBook")}</h2>
-      <div><button class="${pickingTest==='OT'?'':'alt'}" onclick="setTest('OT')">${T("ot")}</button>
-           <button class="${pickingTest==='NT'?'':'alt'}" onclick="setTest('NT')">${T("nt")}</button></div>
-      <div class="grid" style="margin-top:10px">${list.map(b => `<button class="tile" onclick="startModule('${b.replace(/'/g,"\\'")}')">${b}</button>`).join("")}</div>
-      <div style="margin-top:12px"><button class="alt" onclick="go('play')">${T("back")}</button></div>
-    </div>`;
-  paintHeader();
-}
-function legacySetTest(t){ pickingTest = t; renderBookPicker(); }
-function legacyStartModule(book){
-  ctx = { book, testament: TEST(book) };
-  quizIdx = 0;
-  window.currentView = "play";
-  activeModules()[pickingModule].run();
-  paintHeader();
-  window.scrollTo({top:0, behavior:"smooth"});
-}
 
 /* Records a finished module and shows the reward screen */
 function finishModule(name, head, max, hh){
@@ -831,11 +789,11 @@ function finishModule(name, head, max, hh){
   const before = earnedBadges(statsFor(p.id));
   const heart = !!(hh && hh.heart);
   const hands = !!(hh && hh.hands);
-  const points = ATTEND_POINTS + head + (heart ? HEART_POINTS : 0) + (hands ? HANDS_POINTS : 0);
+  const points = ATTEND_POINTS + Math.round(head * lvl().bonus) + (heart ? HEART_POINTS : 0) + (hands ? HANDS_POINTS : 0);
   DB.sessions.push({
     id: "s" + Date.now(), pid: p.id, date: new Date().toISOString(),
     module: name, book: ctx.book, testament: ctx.testament,
-    lang: p.lang, head, max, heart, hands, points
+    lang: p.lang, head, max, heart, hands, points, level: levelName()
   });
   saveDB();
   const st = statsFor(p.id), li = levelInfo(st.points);
@@ -888,9 +846,9 @@ function showProgress(){
     <div class="card">
       <h3>${T("history")}</h3>
       ${history.length ? `<table><thead><tr><th>Date</th><th>Game</th><th>Book</th><th>${T("points")}</th></tr></thead><tbody>
-        ${history.map(s => `<tr><td>${new Date(s.date).toLocaleDateString()}</td><td>${s.module}</td><td>${s.book}</td><td><span class="score">+${s.points}</span></td></tr>`).join("")}
+        ${history.map(s => `<tr><td>${new Date(s.date).toLocaleDateString()}</td><td>${escapeHtml(s.module)}</td><td>${escapeHtml(s.book)}</td><td><span class="score">+${s.points}</span></td></tr>`).join("")}
       </tbody></table>` : `<p class="muted">${T("noHistory")}</p>`}
-      <div style="margin-top:10px"><button class="alt" onclick="clearHistory()">${T("clearHistory")}</button></div>
+      <div style="margin-top:10px"><button class="alt" onclick="exportProgress()">Export my progress</button> <button class="alt" onclick="clearHistory()">${T("clearHistory")}</button></div>
     </div>`;
   paintHeader();
 }
@@ -928,7 +886,7 @@ function runQuestions(qs, onFinish, i=0, score=0){
   document.getElementById("stage").innerHTML = `
     <div class="card">
       <p class="muted">Question ${i+1} of ${qs.length}</p>
-      <h3>${q.q}</h3>
+      <h3>${escapeHtml(q.q)}</h3>
       <div id="opts"></div>
       <div id="fb"></div>
     </div>`;
@@ -980,7 +938,7 @@ function withHH(name, head, max, prompt, mission){
    MODULE 1: ECHO
    ============================================================ */
 function runEcho(){
-  const item = pool(ECHO, 1)[0];
+  const item = pickOne(ECHO);
   const picked = [item];
   document.getElementById("stage").innerHTML = `
     <div class="card">
@@ -1012,7 +970,7 @@ function runEcho(){
    MODULE 2: SCENE DETECTIVE
    ============================================================ */
 function runScene(){
-  const item = SCENE[Math.floor(Math.random() * SCENE.length)];
+  const item = pickOne(SCENE);
   document.getElementById("stage").innerHTML = `
     <div class="card">
       <span class="badge b-head">Head - Scene Detective</span>
@@ -1049,7 +1007,7 @@ function covNode(nodes, i, acc){
   }
   const n = nodes[i];
   runQuestions([{ q: `${n.title} (${n.ref}): ${n.q}`, options: n.options, correct: n.correct, note: n.note }], score => {
-    document.getElementById("stage").innerHTML = `<div class="card"><span class="badge b-game">Node ${i+1} of ${nodes.length}</span><h3>${n.title}</h3><p class="muted">${n.ref}</p></div>` + hhCard(n.heart, n.mission);
+    document.getElementById("stage").innerHTML = `<div class="card"><span class="badge b-game">Node ${i+1} of ${nodes.length}</span><h3>${escapeHtml(n.title)}</h3><p class="muted">${escapeHtml(n.ref)}</p></div>` + hhCard(n.heart, n.mission);
     document.getElementById("cont").onclick = () => {
       const r = readHH();
       acc.score += score; acc.max += 1;
@@ -1063,7 +1021,7 @@ function covNode(nodes, i, acc){
    MODULE 4: WHO SAID IT
    ============================================================ */
 function runWhoSaid(){
-  const items = pool(WHO_SAID, 4);
+  const items = pickMany(WHO_SAID, 4);
   document.getElementById("stage").innerHTML = `
     <div class="card">
       <span class="badge b-game">Who Said It</span>
@@ -1073,7 +1031,7 @@ function runWhoSaid(){
       <button id="start-w">Begin</button>
     </div>`;
   document.getElementById("start-w").onclick = () => {
-    const qs = items.map(x => ({ q: `Who said: "${x.quote}"?`, options: x.options, correct: x.correct, note: x.note }));
+    const qs = items.map(x => ({ q: `Who said: "${x.quote}"?`, ...levelOptions(x.options, x.correct, lvl().options), note: x.note }));
     runQuestions(qs, (score, max) => withHH("Who Said It", score, max,
       "If you had been in one of these scenes, what would you have said or done?",
       "Speak one honest prayer aloud with a friend or family member this week."));
@@ -1128,8 +1086,8 @@ window.sbMove = (pos, dir) => {
    MODULE 6: MEMORY VERSE
    ============================================================ */
 function runMemory(){
-  const item = pool(MEMORY, 1)[0];
-  const html = item.template.replace(/\[\[(.+?)\]\]/g, (_, w) => `<input class="blank" data-a="${w}">`);
+  const item = pickOne(MEMORY);
+  const html = escapeHtml(trimBlanks(item.template)).replace(/\[\[(.+?)\]\]/g, (_, w) => `<input class="blank" data-a="${w}">`);
   document.getElementById("stage").innerHTML = `
     <div class="card">
       <span class="badge b-head">Head - Memory Verse</span>
@@ -1165,35 +1123,6 @@ function runMemory(){
    9 quick questions (1 point, 30 seconds), one Who am I? round
    (5 to 1 points), one listening round (1 point per answer).
    ============================================================ */
-function runOralQuiz(){
-  const quick = pool(QUICK, 9);
-  const who = pool(WHO_AM_I, 1)[0];
-  const listen = pool(LISTENING, 1)[0];
-  quizRounds = [
-    ...quick.map(x => Object.assign({type:"quick"}, x)),
-    Object.assign({type:"who"}, who),
-    Object.assign({type:"audio"}, listen)
-  ];
-  const p = activePlayer();
-  quizIdx = 0;
-  document.getElementById("stage").innerHTML = `
-    <div class="card">
-      <span class="badge b-game">Oral Bible Quiz</span>
-      <h2>Set up your quiz</h2>
-      ${notice([...quick, who, listen])}
-      <p>Enter team or player names, separated by commas. The quiz has ${quizRounds.length} rounds.</p>
-      <input type="text" id="qt-names" value="${escapeHtml(p.name)}">
-      <div style="margin-top:10px"><button id="qt-start">Start quiz</button></div>
-    </div>`;
-  document.getElementById("qt-start").onclick = () => {
-    let names = document.getElementById("qt-names").value.split(",").map(s => s.trim()).filter(Boolean);
-    if(!names.length) names = [p.name];
-    quizTeams = [...new Set(names)];
-    quizScores = {};
-    quizTeams.forEach(t => quizScores[t] = 0);
-    quizRound();
-  };
-}
 function scoreboard(){
   return `<div class="feedback">${quizTeams.map(t => `<span class="badge b-game" style="margin:2px 6px 2px 0">${escapeHtml(t)}: ${quizScores[t]}</span>`).join("")}</div>`;
 }
@@ -1221,7 +1150,7 @@ function quickRound(R, label){
   document.getElementById("stage").innerHTML = `
     <div class="card">
       <span class="badge b-game">${label} - Quick question</span>
-      <h3>${R.q}</h3>
+      <h3>${escapeHtml(R.q)}</h3>
       <div class="feedback">Time left: <span class="score" id="qt-time">30</span> seconds</div>
       <ol style="padding-left:20px">${R.options.map(o => `<li>${escapeHtml(o)}</li>`).join("")}</ol>
       <button id="qt-reveal">Reveal answer</button>
@@ -1381,7 +1310,7 @@ let bq = null;
 function runBibleQuiz(){
   const same = shuffleArr(BIBLE_QUIZ.filter(q => TEST(q.book) === ctx.testament));
   const other = shuffleArr(BIBLE_QUIZ.filter(q => TEST(q.book) !== ctx.testament));
-  bq = { deck: [...same, ...other].slice(0, QUIZ_LENGTH), i: 0, lives: 3, correct: 0, fifty: true, hint: true, cur: null };
+  bq = { deck: quizDeck(), i: 0, lives: lvl().lives, correct: 0, fifty: lvl().lifelines > 0, hint: lvl().hints > 0, cur: null };
   stage().innerHTML = `
     <div class="card">
       <span class="badge b-game">Bible Trivia</span>
@@ -1397,6 +1326,7 @@ function bqQuestion(){
   if(bq.lives <= 0 || bq.i >= bq.deck.length) return bqEnd();
   const q = bq.deck[bq.i];
   bq.cur = { q, order: shuffleArr(q.options.map((_, k) => k)), removed: [], answered: false };
+  if(lvl().options === 3){ bq.cur.removed = [bq.cur.order.filter(k => k !== q.correct)[0]]; }
   bqDraw();
 }
 function bqDraw(){
@@ -1494,7 +1424,7 @@ let bc = null;
 function runCharacters(){
   const same = shuffleArr(BIBLE_CHARS.filter(c => TEST(c.book) === ctx.testament));
   const other = shuffleArr(BIBLE_CHARS.filter(c => TEST(c.book) !== ctx.testament));
-  bc = { deck: [...same, ...other].slice(0, CHAR_ROUND), i: 0, lives: 3, points: 0, shown: 1, solved: false, wrong: [], options: null };
+  bc = { deck: shuffleArr(BIBLE_CHARS.filter(c => c.book === ctx.book)).slice(0, CHAR_ROUND), i: 0, lives: lvl().lives, points: 0, shown: 1, solved: false, wrong: [], options: null };
   stage().innerHTML = `
     <div class="card">
       <span class="badge b-game">Bible Characters</span>
@@ -1687,7 +1617,7 @@ function buildCrossword(list){
 
 function runCrossword(){
   const entry = pool(PUZZLE_BANK, 1)[0];
-  const xw = buildCrossword(entry.words.slice(0, 10));
+  const xw = buildCrossword(entry.words.slice(0, lvl().words));
   const placed = xw.placed;
   const cellsAbs = {};
   placed.forEach(p => { for(let k = 0; k < p.w.length; k++){
@@ -1777,7 +1707,7 @@ function buildWordSearch(words, size){
 
 function runWordSearch(){
   const entry = pool(PUZZLE_BANK, 1)[0];
-  const ws = buildWordSearch(entry.words.slice(0, 8).map(x => x.w), 12);
+  const ws = buildWordSearch(entry.words.slice(0, lvl().words).map(x => x.w), 12);
   const total = ws.placed.length;
   const found = new Set();
   let sel = null;
@@ -1897,12 +1827,12 @@ function textIntro(name, body, onStart){
 function deckForTrivia(){
   const same = shuffleArr(BIBLE_QUIZ.filter(q => TEST(q.book) === ctx.testament));
   const other = shuffleArr(BIBLE_QUIZ.filter(q => TEST(q.book) !== ctx.testament));
-  return [...same, ...other].slice(0, QUIZ_LENGTH);
+  return quizDeck();
 }
 
 /* 1. Echo (Text): read, hide, retell */
 function runEchoText(){
-  const item = pool(ECHO, 1)[0];
+  const item = pickOne(ECHO);
   const text = ECHO_TEXT[item.book] || "";
   stage().innerHTML = `
     <div class="card">
@@ -1910,6 +1840,7 @@ function runEchoText(){
       <h2>Read, then retell</h2>
       ${notice([item])}
       <p class="muted">${item.ref} - ${item.title}</p>
+      ${lvl().echoHints ? `<p class="muted">Key points: ${item.elements.map(e => escapeHtml(e.label)).join(" · ")}</p>` : ""}
       <p class="muted" id="echo-src">Text: King James Version (built-in)</p>
       <div class="verse" id="echo-text" style="font-style:normal">${escapeHtml(text)}</div>
       <p class="muted">Read the passage carefully. When you are ready, hide the text and retell it in your own words.</p>
@@ -1942,7 +1873,7 @@ function runEchoText(){
 
 /* 2. Scene Detective (Text): read the scene, then answer from memory */
 function runSceneText(){
-  const item = SCENE[Math.floor(Math.random() * SCENE.length)];
+  const item = pickOne(SCENE);
   stage().innerHTML = `
     <div class="card">
       <span class="badge b-head">Head - Scene Detective (Text)</span>
@@ -1971,7 +1902,7 @@ function covTextNode(i, acc){
   stage().innerHTML = `
     <div class="card">
       <span class="badge b-game">Story ${i + 1} of ${COVENANT.length}</span>
-      <h3>${n.title} <span class="muted">(${n.ref})</span></h3>
+      <h3>${escapeHtml(n.title)} <span class="muted">(${escapeHtml(n.ref)})</span></h3>
       <p>${escapeHtml(n.summary || "")}</p>
       <button id="ct-q">Answer the question</button>
     </div>`;
@@ -1989,7 +1920,7 @@ function covTextNode(i, acc){
 
 /* 4. Who Said It (Text): type the speaker */
 function runWhoSaidText(){
-  const items = pool(WHO_SAID, 4).map(x => ({ q: `Who said: "${x.quote}"?`, answer: x.options[x.correct], info: x.note }));
+  const items = pickMany(WHO_SAID, 4).map(x => ({ q: `Who said: "${x.quote}"?`, answer: x.options[x.correct], info: x.note }));
   textIntro("Who Said It (Text)", `<h2>Type the speaker</h2><p>${items.length} quotations from Scripture. Type the name or title of the speaker.</p>`, () =>
     typedRun(items, it => `<h3>${escapeHtml(it.q)}</h3>`, it => it.answer, (score, max) =>
       withHH("Who Said It (Text)", score, max,
@@ -2029,7 +1960,7 @@ function runStoryText(){
 
 /* 6. Memory Verse (Text): type the whole verse */
 function runMemoryText(){
-  const item = pool(MEMORY, 1)[0];
+  const item = pickOne(MEMORY);
   const target = item.template.replace(/\[\[(.+?)\]\]/g, "$1");
   const words = s => s.toLowerCase().split(/\s+/).map(w => w.replace(/[^a-z]/g, "")).filter(Boolean);
   const tw = words(target);
@@ -2071,8 +2002,8 @@ function runTriviaText(){
 /* 8. Bible Characters (Text): read clues, type the name */
 function runCharactersText(){
   const deck = shuffleArr(BIBLE_CHARS.filter(c => TEST(c.book) === ctx.testament)).concat(shuffleArr(BIBLE_CHARS.filter(c => TEST(c.book) !== ctx.testament)));
-  const chars = deck.slice(0, CHAR_ROUND);
-  let lives = 3, points = 0;
+  const chars = shuffleArr(BIBLE_CHARS.filter(c => c.book === ctx.book)).slice(0, CHAR_ROUND);
+  let lives = lvl().lives, points = 0;
   const end = () => withHH("Bible Characters (Text)", points, chars.length * 5,
     `You scored ${points} of ${chars.length * 5} points. Which character from today encouraged you most?`,
     "Tell someone about one Bible character you met today and what you learned from them.");
@@ -2122,7 +2053,7 @@ function runCharactersText(){
 /* 9. Bible Crossword (Text): type each answer from its clue */
 function runCrosswordText(){
   const entry = pool(PUZZLE_BANK, 1)[0];
-  const words = entry.words.slice(0, 10);
+  const words = entry.words.slice(0, lvl().words);
   stage().innerHTML = `
     <div class="card">
       <span class="badge b-game">Bible Crossword (Text)</span>
@@ -2160,7 +2091,7 @@ function scrambleWord(w){
 }
 function runWordSearchText(){
   const entry = pool(PUZZLE_BANK, 1)[0];
-  const items = shuffleArr(entry.words).slice(0, 8).map(x => ({ q: `Unscramble: ${scrambleWord(x.w)}`, clue: x.clue, answer: x.w, info: "" }));
+  const items = shuffleArr(entry.words).slice(0, lvl().words).map(x => ({ q: `Unscramble: ${scrambleWord(x.w)}`, clue: x.clue, answer: x.w, info: "" }));
   textIntro("Word Unscramble (Text)", `<h2>${entry.title}</h2><p>Eight Bible words are scrambled. Each has a clue. Type the correct word.</p>`, () =>
     typedRun(items, it => `<h3>${escapeHtml(it.q)}</h3><p class="muted">Clue: ${escapeHtml(it.clue)}</p>`, it => it.answer, (score, total) =>
       withHH("Word Unscramble (Text)", score, total,
@@ -2250,69 +2181,6 @@ function soonNote(){
 }
 
 function setFilter(f){ gameFilter = f; renderGames(); }
-function legacy_loadCatalog(){
-  const norm = c => ({ countries: (c.countries || []).map(co => ({
-    code: co.code, name: co.name,
-    languages: (co.languages || []).map(la => ({
-      code: la.code, name: la.name,
-      versions: (la.versions || []).map(v => {
-        const fileset = v.fileset || v.id;
-        // a version is playable only when its text was published (text/catalog.json marks it available)
-        const available = ("available" in v) ? !!v.available : false;
-        return { fileset, name: v.name, available, filesets: v.filesets || null };
-      }).filter(v => v.fileset)
-    })).filter(la => la.versions.length).sort((a, b) => a.name.localeCompare(b.name))
-  })).filter(co => co.languages.length).sort((a, b) => a.name.localeCompare(b.name)) });
-  // Prefer the published catalogue; otherwise show the configured list (all versions marked coming soon)
-  return fetch("text/catalog.json", { cache: "no-cache" })
-    .then(r => r.ok ? r.json() : null)
-    .then(c => c || fetch("bible-catalog.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null))
-    .then(c => { if(c && Array.isArray(c.countries)) BIBLE_CATALOG = norm(c); })
-    .catch(() => {});
-}
-function legacy_currentBible(){
-  const C = BIBLE_CATALOG.countries;
-  const saved = DB.settings.bible || {};
-  if(!C.length) return { country: null, lang: null, fileset: null, available: false, name: "King James Version (built-in)" };
-  const c = C.find(x => x.code === saved.country) || C[0];
-  const l = c.languages.find(x => x.code === saved.lang) || c.languages[0];
-  const v = l.versions.find(x => x.fileset === saved.fileset) || l.versions[0];
-  return { country: c.code, lang: l.code, fileset: v.fileset, available: v.available, name: v.name, filesets: v.filesets || null };
-}
-function legacy_setBible(country, lang, fileset){
-  DB.settings.bible = { country, lang, fileset };
-  saveDB();
-  renderBiblePicker();
-}
-function legacy_renderBiblePicker(){
-  const el = document.getElementById("bible-picker");
-  if(!el) return;
-  const C = BIBLE_CATALOG.countries;
-  if(!C.length){
-    el.innerHTML = `<p class="muted">Bible text: King James Version (built-in).</p>`;
-    return;
-  }
-  const cur = currentBible();
-  const c = C.find(x => x.code === cur.country) || C[0];
-  const l = c.languages.find(x => x.code === cur.lang) || c.languages[0];
-  const label = v => v.name + (v.available ? "" : " (coming soon)");
-  const sel = (id, items, val, text) => `
-    <label class="muted" for="${id}" style="display:block;margin-top:8px">${text}</label>
-    <select id="${id}" class="sel" style="width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid rgba(127,127,127,.4);background:var(--bg);color:var(--ink)">${items.map(([v, t]) => `<option value="${escapeHtml(v)}" ${v === val ? "selected" : ""}>${escapeHtml(t)}</option>`).join("")}</select>`;
-  el.innerHTML = sel("b-country", C.map(x => [x.code, x.name]), c.code, "Country")
-               + sel("b-lang", c.languages.map(x => [x.code, x.name]), l.code, "Language")
-               + sel("b-ver", l.versions.map(x => [x.fileset, label(x)]), cur.fileset, "Version")
-               + `<p class="muted" style="font-size:.8rem;margin-top:6px">Passages in Echo use this version. Versions marked "coming soon" are not published yet, so the built-in text is used.</p>`;
-  document.getElementById("b-country").onchange = e => {
-    const nc = C.find(x => x.code === e.target.value);
-    setBible(nc.code, nc.languages[0].code, nc.languages[0].versions[0].fileset);
-  };
-  document.getElementById("b-lang").onchange = e => {
-    const nl = c.languages.find(x => x.code === e.target.value);
-    setBible(c.code, nl.code, nl.versions[0].fileset);
-  };
-  document.getElementById("b-ver").onchange = e => setBible(c.code, l.code, e.target.value);
-}
 
 function renderGames(){
   const list = GAMES.map((g, i) => ({ g, i })).filter(({ g }) => gameFilter === "all" || g.formats.some(f => f.tag === gameFilter));
@@ -2340,6 +2208,10 @@ function home(){
       <p class="muted">🔥 ${T("dailyGoal")}</p>
     </div>
     <div class="card">
+      <p class="muted" style="margin:6px 0 2px">Level</p>
+      <div class="chips">${Object.keys(DIFFICULTY).map(k => `<button class="chip ${levelName() === k ? "on" : ""}" onclick="setLevel('${k}')">${DIFFICULTY[k].label}</button>`).join("")}</div>
+      <p class="muted" style="font-size:.8rem">Easy: 5 lives, 3 options, shorter puzzles, and Echo key points. Medium: 3 lives. Hard: 1 life, no lifelines, the longest puzzles, and double Head points.</p>
+      <p class="muted" style="font-size:.8rem">Content is written for learning and is being reviewed by partners. Check any passage against your own Bible. Bible text: King James Version (public domain).</p>
       <h2>Games</h2>
       <div class="chips">
         <button class="chip" data-f="all" onclick="setFilter('all')">All</button>
@@ -2392,18 +2264,34 @@ function playGame(){
   renderBookPicker();
 }
 let pickingTest = "OT";
+function gameBankFor(gameId){
+  const banks = {
+    echo: ECHO, scene: SCENE, who: WHO_SAID, story: STORY, memory: MEMORY,
+    trivia: BIBLE_QUIZ, characters: BIBLE_CHARS, crossword: PUZZLE_BANK, wordsearch: PUZZLE_BANK
+  };
+  return banks[gameId] || [];
+}
+/* Books that have questions for a game (the others are shown greyed out and cannot be chosen) */
+function booksWithContent(gameId){
+  return new Set(gameBankFor(gameId).map(x => x.book));
+}
 function renderBookPicker(){
   const g = GAMES[pickingGame];
   const list = pickingTest === "OT" ? OT_BOOKS : NT_BOOKS;
+  const has = booksWithContent(g.id);
+  const count = list.filter(b => has.has(b)).length;
   stage().innerHTML = `
     <div class="card">
       <span class="badge b-game">${g.title}</span>
       <h2>${T("chooseBook")}</h2>
+      <p class="muted">${count} of ${list.length} books have questions for ${g.title}. The others are greyed out.</p>
       <div class="chips">
         <button class="chip ${pickingTest === "OT" ? "on" : ""}" onclick="setTest('OT')">${T("ot")}</button>
         <button class="chip ${pickingTest === "NT" ? "on" : ""}" onclick="setTest('NT')">${T("nt")}</button>
       </div>
-      <div class="grid" style="margin-top:10px">${list.map(b => `<button class="tile" onclick="startModule('${b.replace(/'/g, "\\'")}')">${b}</button>`).join("")}</div>
+      <div class="grid" style="margin-top:10px">${list.map(b => has.has(b)
+        ? `<button class="tile" onclick="startModule('${b.replace(/'/g, "\\'")}')">${b}</button>`
+        : `<button class="tile" disabled title="No questions for this book yet" style="opacity:.4;cursor:not-allowed">${b}</button>`).join("")}</div>
       <div style="margin-top:12px"><button class="alt" onclick="renderDetail()">${T("back")}</button></div>
     </div>`;
   paintHeader();
@@ -2434,28 +2322,6 @@ function parseRef(ref){
   const from = m[3] ? +m[3] : 1;
   const to = m[4] ? +m[4] : (m[3] ? from : 999);
   return { code, ch, from, to };
-}
-async function legacy_fetchPassage(ref){
-  const bible = currentBible();
-  if(!bible.fileset || !bible.available) return null;
-  const p = parseRef(ref);
-  if(!p) return null;
-  const base = (APP_CONFIG.api && APP_CONFIG.api.base) || "";
-  const isStatic = !!((APP_CONFIG.staticText || {}).enabled);
-  if(!isStatic && !base) return null;
-  // Old Testament books use the OT fileset, New Testament books the NT fileset (or a complete one)
-  const isOT = BOOK_CODE_LIST.indexOf(p.code) < 39;
-  const fs = (bible.filesets && (bible.filesets[isOT ? "OT" : "NT"] || bible.filesets.C)) || bible.fileset;
-  const url = isStatic
-    ? `text/${fs}/${p.code}/${p.ch}.json`
-    : `${base}/api/text/${fs}/${p.code}/${p.ch}`;
-  try{
-    const r = await fetch(url);
-    if(!r.ok) return null;
-    const j = await r.json();
-    const verses = (j.verses || []).filter(v => v.verse >= p.from && v.verse <= p.to);
-    return verses.length ? { text: verses.map(v => v.text).join(" "), name: bible.name } : null;
-  }catch(e){ return null; }
 }
 
 /* ----- Audio formats (use Bible Brain audio when configured) ----- */
@@ -2493,7 +2359,25 @@ function runMemoryAudio(){
   document.getElementById("mva-go").onclick = () => runMemoryText();
 }
 
-  /* ===== BIBLE TEXT ===================================================
+  /* ===== DIFFICULTY LEVELS: Easy, Medium, Hard ===== */
+const DIFFICULTY = {
+  easy:   { label:"Easy",   lives:5, lifelines:1, hints:1, options:3, words:6,  blanks:2,  echoHints:true,  bonus:1 },
+  medium: { label:"Medium", lives:3, lifelines:1, hints:1, options:4, words:8,  blanks:99, echoHints:false, bonus:1.5 },
+  hard:   { label:"Hard",   lives:1, lifelines:0, hints:0, options:4, words:10, blanks:99, echoHints:false, bonus:2 }
+};
+function levelName(){ return (DB.settings.level && DIFFICULTY[DB.settings.level]) ? DB.settings.level : "medium"; }
+function lvl(){ return DIFFICULTY[levelName()]; }
+function setLevel(name){ DB.settings.level = name; saveDB(); home(); }
+/* keep the correct answer and n-1 wrong ones, in a new order */
+function levelOptions(options, correct, n){
+  const wrong = options.map((o, i) => i).filter(i => i !== correct);
+  const keep = shuffleArr([correct, ...shuffleArr(wrong).slice(0, Math.max(0, n - 1))]);
+  return { options: keep.map(i => options[i]), correct: keep.indexOf(correct) };
+}
+/* Memory Verse: only the first few blanks on Easy */
+function trimBlanks(t){ let n = 0; return t.replace(/\[\[(.+?)\]\]/g, (m, w) => (++n <= lvl().blanks) ? m : w); }
+
+/* ===== BIBLE TEXT ===================================================
    1. Built-in English (King James Version), embedded in the app. Works offline.
    2. Bible Brain browser: the Quiz Master's own key (typed in, kept only in memory)
       lists countries, languages and Bibles; chosen Bibles are downloaded to this device.
@@ -2517,7 +2401,56 @@ function loadDefaultBible(){
     .then(j => (DEFAULT_TEXT = j))
     .catch(() => null);
 }
-function loadCatalog(){ return loadDefaultBible(); }
+function loadCatalog(){
+  return Promise.all([loadDefaultBible(), loadGeneratedBank(), loadExtraBank()]).then(() => null);
+}
+/* Generated questions for all 66 books (content/generated-bank.json), added to the banks */
+let GENERATED_BANK = null;
+function loadGeneratedBank(){
+  if(GENERATED_BANK) return Promise.resolve(GENERATED_BANK);
+  return fetch("content/generated-bank.json")
+    .then(r => { if(!r.ok) throw new Error("no bank"); return r.json(); })
+    .then(j => {
+      GENERATED_BANK = j;
+      Object.keys(j.books || {}).forEach(code => {
+        const b = j.books[code];
+        (b.memory || []).forEach(x => MEMORY.push(x));
+        (b.trivia || []).forEach(x => BIBLE_QUIZ.push(x));
+        (b.who || []).forEach(x => WHO_SAID.push(x));
+      });
+      return GENERATED_BANK;
+    })
+    .catch(() => null);
+}
+/* Hand-written questions (content/extra-bank.json): Echo passages, Bible Characters and word lists */
+function loadExtraBank(){
+  return fetch("content/extra-bank.json")
+    .then(r => { if(!r.ok) throw new Error("no extra bank"); return r.json(); })
+    .then(j => {
+      (j.echo || []).forEach(x => ECHO.push(x));
+      (j.chars || []).forEach(x => BIBLE_CHARS.push(x));
+      (j.puzzles || []).forEach(x => PUZZLE_BANK.push(x));
+      return j;
+    })
+    .catch(() => null);
+}
+/* Pick from the selected book; fall back to the nearest book only if the book has none */
+function pickOne(arr){
+  const b = arr.filter(x => x.book === ctx.book);
+  if(b.length) return b[Math.floor(Math.random() * b.length)];
+  return pool(arr, 1)[0];
+}
+function pickMany(arr, n){
+  const b = shuffleArr(arr.filter(x => x.book === ctx.book));
+  return b.length >= n ? b.slice(0, n) : pool(arr, n);
+}
+/* Bible Trivia deck: the selected book first, then the same Testament, then the rest */
+function quizDeck(){
+  const book = shuffleArr(BIBLE_QUIZ.filter(q => q.book === ctx.book));
+  const same = shuffleArr(BIBLE_QUIZ.filter(q => q.book !== ctx.book && TEST(q.book) === ctx.testament));
+  const other = shuffleArr(BIBLE_QUIZ.filter(q => TEST(q.book) !== ctx.testament));
+  return [...book, ...same, ...other].slice(0, QUIZ_LENGTH);
+}
 
 /* ---- storage: downloaded chapters live in IndexedDB (memory fallback if unavailable) ---- */
 const BIBLE_STORE = { db: null, mem: {} };
@@ -2698,7 +2631,8 @@ async function bpDownloadedList(){
   return out;
 }
 function bpSelect(id, items, selected, placeholder, attrs){
-  return `<select id="${id}" ${attrs || ""} style="width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid rgba(127,127,127,.4);background:var(--bg);color:var(--ink);margin-bottom:8px">
+  const names = { "bp-source": "Bible for Echo passages", "bp-country": "Country", "bp-lang": "Language" };
+  return `<select id="${id}" aria-label="${names[id] || id}" ${attrs || ""} style="width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid rgba(127,127,127,.4);background:var(--bg);color:var(--ink);margin-bottom:8px">
     <option value="">${escapeHtml(placeholder)}</option>${items.map(([v, t]) => `<option value="${escapeHtml(v)}" ${v === selected ? "selected" : ""}>${escapeHtml(t)}</option>`).join("")}</select>`;
 }
 function renderBiblePicker(){
@@ -2713,7 +2647,7 @@ function renderBiblePicker(){
     <details style="margin-top:6px">
       <summary>Add a Bible from Bible Brain</summary>
       <p class="muted" style="font-size:.82rem">Type your own free Bible Brain key. It is used only to fetch the text and is not saved. Downloaded text stays on this device.</p>
-      <input type="password" id="bp-key" autocomplete="off" placeholder="Bible Brain API key" value="${escapeHtml(BB_KEY)}" style="width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid rgba(127,127,127,.4);background:var(--bg);color:var(--ink);margin-bottom:8px">
+      <input type="password" id="bp-key" aria-label="Bible Brain API key" autocomplete="off" placeholder="Bible Brain API key" value="${escapeHtml(BB_KEY)}" style="width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid rgba(127,127,127,.4);background:var(--bg);color:var(--ink);margin-bottom:8px">
       <button id="bp-load" class="alt">Load countries</button>
       ${BP.countries ? bpSelect("bp-country", BP.countries.map(c => [c.code, c.name]), BP.country || "", "Choose a country", "") : ""}
       ${BP.langs ? bpSelect("bp-lang", BP.langs.map((l, i) => [String(i), l.name + (l.autonym && l.autonym !== l.name ? " (" + l.autonym + ")" : "")]), "", "Choose a language", "") : ""}
@@ -2741,6 +2675,7 @@ function renderBiblePicker(){
 }
 
 loadConfig().then(loadCatalog).then(() => {
+  if(window.DB_DAMAGED) toast("Your saved progress could not be read. A copy was kept on this device.");
   if(activePlayer()){ go("home"); } else { showProfile(true); }
 }).catch(e => showStartError("Start-up: " + (e && e.message ? e.message : e)));
 </script>

@@ -7,9 +7,6 @@
     "base": "https://api.yourdomain.org",
     "note": "Only the public address of the media proxy goes here. The Bible Brain key stays on the server."
   },
-  "bibleBrain": {
-    "note": "Countries, languages and versions are listed in offline-text.json. The build writes text/catalog.json, which the game reads. If the media server is used, each version's fileset must be in ALLOWED_FILESETS."
-  },
   "media": {
     "echo": "/api/audio/REPLACE_ENGLISH_AUDIO_FILESET/LUK/15",
     "sceneVideo": "",
@@ -22,11 +19,6 @@
     "enabled": false,
     "folder": "media",
     "note": "Set enabled to true only after the audio has been downloaded at build time and the licence allows it."
-  },
-  "staticText": {
-    "enabled": true,
-    "folder": "text",
-    "note": "Text is read from files published at build time (DOWNLOAD_TEXT=true). Set to false to use the media server instead."
   },
   "features": {
     "text": true,

@@ -1,0 +1,73 @@
+name: Deploy media proxy to cPanel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install packages
+        run: npm install
+
+      - name: Syntax check
+        run: node --check server.js && node --check config.js
+
+      - name: Make sure no .env file is tracked
+        run: |
+          if git ls-files | grep -E '(^|/)\.env$'; then
+            echo "::error::A .env file is tracked by Git. Remove it: git rm --cached .env"
+            exit 1
+          fi
+          echo "No .env files tracked"
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH access
+        env:
+          SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
+          SSH_HOST: ${{ secrets.CPANEL_SSH_HOST }}
+          SSH_PORT: ${{ secrets.CPANEL_SSH_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Copy files to the cPanel app folder
+        env:
+          SSH_HOST: ${{ secrets.CPANEL_SSH_HOST }}
+          SSH_PORT: ${{ secrets.CPANEL_SSH_PORT }}
+          SSH_USER: ${{ secrets.CPANEL_USER }}
+          APP_PATH: ${{ secrets.CPANEL_APP_PATH }}
+        run: |
+          rsync -avz --delete \
+            --exclude '.env' --exclude 'node_modules' --exclude '.git' --exclude '.github' \
+            -e "ssh -p $SSH_PORT -i ~/.ssh/id_ed25519" \
+            ./ "$SSH_USER@$SSH_HOST:$APP_PATH/"
+
+      - name: Install packages and restart the app
+        env:
+          SSH_HOST: ${{ secrets.CPANEL_SSH_HOST }}
+          SSH_PORT: ${{ secrets.CPANEL_SSH_PORT }}
+          SSH_USER: ${{ secrets.CPANEL_USER }}
+          APP_PATH: ${{ secrets.CPANEL_APP_PATH }}
+        run: |
+          ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" \
+            "cd $APP_PATH && npm install --omit=dev && mkdir -p tmp && touch tmp/restart.txt"
