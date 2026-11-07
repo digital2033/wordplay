@@ -1,0 +1,134 @@
+{
+  "who": [
+    {
+      "book": "Leviticus",
+      "ref": "Leviticus 10:3",
+      "speaker": "Moses",
+      "distractors": [
+        "Aaron",
+        "Nadab",
+        "Eleazar"
+      ]
+    },
+    {
+      "book": "Deuteronomy",
+      "ref": "Deuteronomy 31:7",
+      "speaker": "Moses",
+      "distractors": [
+        "Joshua",
+        "Aaron",
+        "Samuel"
+      ]
+    },
+    {
+      "book": "Ezra",
+      "ref": "Ezra 10:2",
+      "speaker": "Shechaniah",
+      "distractors": [
+        "Ezra",
+        "Jehiel",
+        "Nehemiah"
+      ]
+    },
+    {
+      "book": "Jonah",
+      "ref": "Jonah 2:1",
+      "speaker": "Jonah",
+      "distractors": [
+        "Elijah",
+        "Elisha",
+        "Nathan"
+      ]
+    },
+    {
+      "book": "Amos",
+      "ref": "Amos 7:14",
+      "speaker": "Amos",
+      "distractors": [
+        "Amaziah",
+        "Hosea",
+        "Isaiah"
+      ]
+    },
+    {
+      "book": "Acts",
+      "ref": "Acts 2:14",
+      "speaker": "Peter",
+      "distractors": [
+        "Paul",
+        "Stephen",
+        "Barnabas"
+      ]
+    },
+    {
+      "book": "Galatians",
+      "ref": "Galatians 5:2",
+      "speaker": "Paul",
+      "distractors": [
+        "Peter",
+        "Barnabas",
+        "Silas"
+      ]
+    },
+    {
+      "book": "1 Thessalonians",
+      "ref": "1 Thessalonians 2:18",
+      "speaker": "Paul",
+      "distractors": [
+        "Silas",
+        "Timothy",
+        "Luke"
+      ]
+    },
+    {
+      "book": "2 Corinthians",
+      "ref": "2 Corinthians 10:1",
+      "speaker": "Paul",
+      "distractors": [
+        "Timothy",
+        "Titus",
+        "Apollos"
+      ]
+    },
+    {
+      "book": "Philemon",
+      "ref": "Philemon 19",
+      "speaker": "Paul",
+      "distractors": [
+        "Onesimus",
+        "Timothy",
+        "Silas"
+      ]
+    },
+    {
+      "book": "Deuteronomy",
+      "ref": "Deuteronomy 1:3",
+      "speaker": "Moses",
+      "distractors": [
+        "Joshua",
+        "Aaron",
+        "Samuel"
+      ]
+    },
+    {
+      "book": "Leviticus",
+      "ref": "Leviticus 10:19",
+      "speaker": "Aaron",
+      "distractors": [
+        "Nadab",
+        "Eleazar",
+        "Ithamar"
+      ]
+    },
+    {
+      "book": "Amos",
+      "ref": "Amos 7:12",
+      "speaker": "Amaziah",
+      "distractors": [
+        "Jeroboam",
+        "Hosea",
+        "Isaiah"
+      ]
+    }
+  ]
+}

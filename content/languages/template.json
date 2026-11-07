@@ -1,0 +1,44 @@
+{
+  "language": { "code": "xx", "name": "Language name", "bibleTextVersion": "Bible version code from Bible Brain" },
+  "status": "draft: translation in progress; not yet reviewed",
+  "uiLabels": {
+    "play": "translate",
+    "back": "translate",
+    "start": "translate",
+    "continue": "translate",
+    "signOut": "translate",
+    "leaderboard": "translate",
+    "about": "translate"
+  },
+  "gameTitles": {
+    "echo": { "title": "translate", "tagline": "translate" },
+    "sceneDetective": { "title": "translate", "tagline": "translate" },
+    "covenantQuest": { "title": "translate", "tagline": "translate" },
+    "whoSaidIt": { "title": "translate", "tagline": "translate" },
+    "storyBuilder": { "title": "translate", "tagline": "translate" },
+    "memoryVerse": { "title": "translate", "tagline": "translate" },
+    "bibleTrivia": { "title": "translate", "tagline": "translate" },
+    "bibleCharacters": { "title": "translate", "tagline": "translate" },
+    "bibleCrossword": { "title": "translate", "tagline": "translate" },
+    "wordSearch": { "title": "translate", "tagline": "translate" }
+  },
+  "questionFrames": {
+    "whichBookIsVerseFrom": "Which book of the Bible is this verse from?",
+    "fillMissingWord": "Fill in the missing word",
+    "whoSaid": "Who said: \"{quote}\"?",
+    "questionOf": "Question {n} of {total}"
+  },
+  "echoPrompts": [
+    { "ref": "Genesis 22:1-14", "heart": "translate", "mission": "translate" }
+  ],
+  "characterClues": [
+    { "name": "Abraham", "book": "Genesis", "clues": ["translate", "translate", "translate", "translate", "translate"] }
+  ],
+  "storyCards": [
+    { "title": "translate", "book": "Genesis", "ref": "Genesis 37; 39-45", "cards": ["translate", "translate", "translate", "translate"] }
+  ],
+  "wordLists": [
+    { "book": "Genesis", "title": "translate", "words": [ { "w": "letters of the target script", "clue": "translate" } ] }
+  ],
+  "review": { "theologicalCheck": "", "nativeReview": "", "groupTest": "", "date": "" }
+}

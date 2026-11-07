@@ -2,7 +2,7 @@
   "echo": [
     {"book":"Genesis","ref":"Genesis 22:1-14","title":"Abraham and Isaac",
      "elements":[
-       {"label":"God tested Abraham","keys":["tested","test"]},
+       {"label":"God tested Abraham","keys":["tempt","tested","test"]},
        {"label":"Abraham was told to offer his son Isaac","keys":["isaac","son"]},
        {"label":"They went to the land of Moriah with wood and fire","keys":["moriah","wood","fire"]},
        {"label":"Isaac asked where the lamb was","keys":["lamb"]},

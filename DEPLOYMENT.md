@@ -83,6 +83,8 @@ The GitHub Actions file for the server is kept as `media-server/deploy-server.wo
 
 ## 6. Analytics (Firebase), setting it up
 
+The full step-by-step guide, including the shared leaderboard, is in **[FIREBASE-SETUP.md](FIREBASE-SETUP.md)**. The summary is below.
+
 Analytics is optional, opt-in, and anonymous. It is configured in `firebase-config.json`.
 
 1. In the Firebase console, open your project (`wordplay-bible`) and enable **Google Analytics** for the web app.
@@ -92,3 +94,19 @@ Analytics is optional, opt-in, and anonymous. It is configured in `firebase-conf
 5. Check that the **Analytics** event stream shows `game_started` and `game_finished` after you agree in the app.
 
 **Before publishing to children:** have the privacy notice reviewed for your country (for example COPPA in the United States, and the UK Children's code or GDPR in Europe).
+
+---
+
+## 7. Shared leaderboard (Firestore), setting it up
+
+See **[FIREBASE-SETUP.md](FIREBASE-SETUP.md)** for the full steps, the live check, and troubleshooting.
+
+The shared leaderboard uses Firestore and anonymous sign-in. Both are included in Firebase's free plan.
+
+1. In the Firebase console, open the `wordplay-bible` project. Choose **Authentication > Get started**, then **Sign-in method**, and enable **Anonymous**.
+2. Choose **Firestore Database > Create database**, in production mode.
+3. Publish the rules in `firestore.rules`. In the console, open **Firestore > Rules**, paste the file, and choose **Publish**. (With the Firebase CLI: `firebase deploy --only firestore:rules`.)
+4. Keep the API key restriction from section 6. The leaderboard uses the same key.
+5. After the first deployment, share a test score in the app, and check that it appears under **Firestore > Data > scores**. Then remove it with the app's **Stop sharing** button, and check that it disappears.
+
+**Before you open the leaderboard to children:** the nicknames are public. Check the nickname rules and the privacy notice with the people responsible for safeguarding in your organisation. The rules allow only the owner to change an entry, but nothing moderates the nicknames yet.

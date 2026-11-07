@@ -63,7 +63,7 @@ def build():
         entry = {"memory": [], "trivia": [], "who": []}
 
         # --- Memory Verse: 3 verses with 3-5 blanks each
-        for c, n, t in ok[:3]:
+        for c, n, t in ok[:5]:
             words = t.split()
             cands = [i for i, w in enumerate(words) if len(core(w)) >= 4 and core(w).lower() not in STOP]
             if len(cands) < 3:

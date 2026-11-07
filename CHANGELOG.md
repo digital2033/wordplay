@@ -2,6 +2,112 @@
 
 All notable changes to Wordplay are recorded here. Versions follow the form `major.minor`.
 
+## 1.15.0 - Firebase setup for the shared leaderboard and analytics
+
+### Added
+- `FIREBASE-SETUP.md`: step-by-step setup of Firebase (project, web app, Google Analytics, anonymous sign-in, Firestore, security rules, API key restriction, privacy settings), the live check, and troubleshooting.
+- `firebase.json` and `.firebaserc`, so the rules can be published with the Firebase command line.
+- `tests/firebase_live_check.py`: a live check against the deployed site and the real Firebase project. It is not run by the publishing workflow.
+
+### Changed
+- If a score cannot be shared, the player sees a message.
+
+### Note
+- The live check needs the Firebase steps in FIREBASE-SETUP.md to be done first. It has not been run against a real project from the build environment.
+
+## 1.14.1 - Names: only what the player types
+
+### Fixed
+- The sign-in and switch-player pictures no longer show a character name (Noah, Joseph and so on) under each avatar. Only the name the player typed is shown. The character names remain as hidden labels for screen readers and as tooltips.
+- `tests/names_check.py`: 5 checks.
+
+## 1.14.0 - Roadmap and language packs (planned)
+
+### Added
+- **Coming soon** notes: on the home page, the About page and the README, for games in other languages. Partner input is noted as needed.
+- `ROADMAP.md`: planned features, with partner input needed for each.
+- `content/languages/`: the README and `template.json` for partners who want to create a language pack. The template lists every field to translate, and leaves the references and book names in English.
+
+### Notes
+- No game changes. Other-language games are planned, not built yet.
+
+## 1.13.0 - Echo complete, more Bible Characters and Story Builder, more Who Said It
+
+### Added
+- **Echo passages for the remaining 36 books**, so every book has one (66 of 66). Each passage has five story points, a heart prompt and a mission.
+- **Echo keyword checker** (`scripts/check_echo_keys.py`): every element must have a keyword found in the King James verses. It found and fixed five keywords and references in earlier passages. It is a required step in the publishing workflow.
+- **Bible Characters** for Exodus (Jethro, Bezalel, Jochebed), Jeremiah (Jeremiah, Baruch, Ebedmelech), Ezekiel (Ezekiel, Gog, Aholibah) and Hosea (Hosea, Gomer). All 37 books that have named people now have three or more characters.
+- **Story Builder** for 18 more narrative books (Numbers, Joshua, Judges, Ruth, 1 and 2 Samuel, 1 and 2 Kings, 1 and 2 Chronicles, Ezra, Nehemiah, Esther, Job, Matthew, Mark, John and Acts). It now has 22 stories.
+- **Who Said It** with 13 hand-written entries in 10 books. Each quotation is taken from the King James text, and the speaker must be named in the verse.
+
+### Changed
+- Who Said It counts only books where the text names speakers. Letters, poems, wisdom books and most prophecies are marked as not applicable (a proposal, to agree with the reviewers).
+
+### Status against the proposed minimums
+- Bible Trivia, Memory Verse, Crossword and Word Search, Echo: 66 of 66.
+- Bible Characters: 37 of 37 books that have named people.
+- Story Builder: all 23 narrative books.
+- Who Said It: 22 of 31 books where it applies. Still short: Leviticus, Deuteronomy, Ezra, Nehemiah, Amos, Jonah, 2 Corinthians, Galatians and Philemon.
+
+### Verified
+- Echo keywords: all 69 passages pass. Deep pass: the only notices are the nine Who Said It books still short (Leviticus, Deuteronomy, Ezra, Nehemiah, Amos, Jonah, Galatians, 1 Thessalonians, 2 Corinthians, Philemon). Those rounds are padded from other books, and the game says so.
+
+## 1.12.0 - Minimum questions per book: core games complete
+
+### Added
+- **Word lists for the 21 books that had none**, plus 3 John: Ecclesiastes, Song of Songs, Jeremiah, Lamentations, Ezekiel, Hosea, Joel, Amos, Obadiah, Micah, Nahum, Habakkuk, Zephaniah, Haggai, Zechariah, Malachi, 2 Peter, 1 John, 2 John, 3 John and Jude. Every book now has a crossword and word-search list.
+- **Three Bible Trivia questions on 3 John**, from verses 1, 9 and 12. The book now has 12 questions.
+- **Coverage checker** (`scripts/coverage_check.py`) and report (`content/coverage-report.md`). The workflow runs it in report mode.
+- The checker and loader accept hand-written trivia (`trivia` in the content files).
+
+### Changed
+- Memory Verse: five candidate verses per book (was three), so every book has at least three memory verses. The bank has 330 Memory Verse items.
+- The question list (`content/question-list.csv`) now has 2,715 rows.
+
+### Status against the proposed minimums
+- Bible Trivia (10 per book): 66 of 66. Memory Verse (3): 66 of 66. Crossword and Word Search (one list): 66 of 66.
+- Echo (one passage): 30 of 66. Bible Characters (three, where named people exist): 33 of 37. Story Builder (one story, narrative books): 5 of 23. Who Said It (three, where speakers exist): 22 of 66.
+
+### Verified
+- Deep pass: 0 problems, including 3 John. Basic checks, scope and levels pass.
+
+## 1.11.0 - Choose what to play: whole Bible, Testament, or books
+
+### Added
+- **A choice after Start**, before any book list: random from the whole Bible, random from the New Testament, random from the Old Testament, or choose book(s).
+- **Choose book(s)** now lets the player tick one or more books, then start. Greyed-out books have no questions for that game.
+- A random option is greyed out when a game has no questions in that part of the Bible.
+- `tests/scope_check.py`: 12 checks.
+
+### Changed
+- Every game uses one scope check (`inScope()`) for its questions, instead of a single book. Trivia, Memory Verse, Who Said It, Bible Characters, Echo, Story Builder, Scene Detective, crossword and word search all follow it.
+- Play again repeats the same choice.
+- The history records the scope (for example "New Testament (random)" or "Genesis, Exodus").
+- The About page and the README describe the new choice.
+
+### Verified
+- Scope checks 12 of 12. Basic browser checks 35 of 35. Levels, safety (10), analytics (12), leaderboard (13) and About (25) all pass.
+- Full pass over all games: no page errors. The only notice left is the known 3 John case.
+
+## 1.10.0 - Shared leaderboard, About page, more content, question list
+
+### Added
+- **Shared leaderboard (opt-in).** Players can share a nickname (2 to 20 letters or numbers), their level and points, and see the top 20. Real names are never sent. Sharing can be stopped at any time, and the score is removed.
+- **Firestore security rules** (`firestore.rules`): only the owner can write their entry, with checked fields and ranges.
+- **About page** in the menu, with the information from the README, the licence and the content disclaimer.
+- **Question list:** `scripts/export_question_list.py` writes `content/question-list.csv` (2,370 rows) and `content/question-summary.md`.
+- **Content:** four Story Builder stories (Genesis, Exodus, Jonah, Daniel), and four Echo passages (Matthew 6, John 15, Acts 2, Mark 10). Story Builder now covers five books.
+- Tests: `leaderboard_check.py` (13 checks) and `about_check.py` (25 checks).
+
+### Changed
+- The leaderboard shows the shared table when a player has agreed, and each player's own status on this device.
+- Each game's result is published to the shared leaderboard after the game, if the player has agreed.
+- `APP_VERSION` is 1.10.0, and it is shown on the About page.
+
+### Verified
+- Basic browser checks 35 of 35; levels, safety (10 of 10), analytics (12 of 12), leaderboard (13 of 13), About (25 of 25).
+- Full pass over all games: no page errors. The only notice left is the known 3 John case.
+
 ## 1.9.0 - Anonymous analytics (opt-in) and personal status
 
 ### Added

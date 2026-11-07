@@ -54,6 +54,7 @@ with sync_playwright() as p:
             check(f"{title}: starts without a book chooser", page.locator(".tile").count() == 0)
             continue
         page.click("text=Start")
+        page.click("button:has-text(\"Choose book\")")
         page.wait_for_selector(".tile", timeout=5000)
         tiles = page.locator(".tile")
         n = tiles.count()
@@ -79,6 +80,7 @@ with sync_playwright() as p:
         page.locator(".gcard").nth(idx).click()
         page.wait_for_selector("text=Start", timeout=5000)
         page.click("text=Start")
+        page.click("button:has-text(\"Choose book\")")
         page.wait_for_selector(".tile", timeout=5000)
         if page.evaluate("NT_BOOKS.includes(%r)" % book):
             page.click("text=New Testament"); page.wait_for_timeout(120)

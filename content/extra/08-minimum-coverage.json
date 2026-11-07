@@ -1,0 +1,1011 @@
+{
+  "trivia": [
+    {
+      "book": "3 John",
+      "q": "To whom is the third letter of John addressed?",
+      "options": [
+        "Timothy",
+        "Gaius",
+        "Titus",
+        "Philemon"
+      ],
+      "correct": 1,
+      "ref": "3 John 1",
+      "info": "John addresses this short letter to his beloved Gaius."
+    },
+    {
+      "book": "3 John",
+      "q": "Which church leader loved to have the preeminence and refused to receive the brethren?",
+      "options": [
+        "Demetrius",
+        "Diotrephes",
+        "Gaius",
+        "Nicolaus"
+      ],
+      "correct": 1,
+      "ref": "3 John 9-10",
+      "info": "Diotrephes loved to have the preeminence among them."
+    },
+    {
+      "book": "3 John",
+      "q": "Which man was well reported of by all men, and by the truth itself?",
+      "options": [
+        "Demetrius",
+        "Diotrephes",
+        "Gaius",
+        "Epaphras"
+      ],
+      "correct": 0,
+      "ref": "3 John 12",
+      "info": "Demetrius had a good report from everyone, and from the truth itself."
+    }
+  ],
+  "puzzles": [
+    {
+      "book": "Ecclesiastes",
+      "title": "Words from Ecclesiastes",
+      "words": [
+        {
+          "w": "VANITY",
+          "clue": "Everything under the sun is ___ of vanities"
+        },
+        {
+          "w": "PREACHER",
+          "clue": "The name the author gives himself in chapter one"
+        },
+        {
+          "w": "SOLOMON",
+          "clue": "King traditionally linked with this book"
+        },
+        {
+          "w": "WIND",
+          "clue": "What the Preacher says is vexation, chasing it"
+        },
+        {
+          "w": "SEASON",
+          "clue": "To every thing there is a ___"
+        },
+        {
+          "w": "LABOUR",
+          "clue": "Toil done under the sun"
+        },
+        {
+          "w": "CREATOR",
+          "clue": "Remember now thy ___ in the days of thy youth"
+        },
+        {
+          "w": "JOY",
+          "clue": "Eat your bread with this, the Preacher says"
+        },
+        {
+          "w": "WISDOM",
+          "clue": "Better than strength, in the Preacher's view"
+        },
+        {
+          "w": "FEAR",
+          "clue": "Fear God and keep his commandments"
+        }
+      ]
+    },
+    {
+      "book": "Song of Songs",
+      "title": "Words from the Song of Songs",
+      "words": [
+        {
+          "w": "SHULAMITE",
+          "clue": "Name given to the beloved in chapter six"
+        },
+        {
+          "w": "SOLOMON",
+          "clue": "The king in the song"
+        },
+        {
+          "w": "LEBANON",
+          "clue": "Mountain country praised in the song"
+        },
+        {
+          "w": "SPIKENARD",
+          "clue": "Fragrant plant mentioned in chapter four"
+        },
+        {
+          "w": "DOVE",
+          "clue": "Term of endearment for the beloved"
+        },
+        {
+          "w": "VINEYARD",
+          "clue": "Place the beloved keeps"
+        },
+        {
+          "w": "GARDEN",
+          "clue": "A place enclosed, in the song"
+        },
+        {
+          "w": "LOVE",
+          "clue": "The great theme of the song"
+        },
+        {
+          "w": "LILY",
+          "clue": "Flower of the valleys"
+        },
+        {
+          "w": "ROSE",
+          "clue": "Flower of Sharon"
+        }
+      ]
+    },
+    {
+      "book": "Jeremiah",
+      "title": "Words from Jeremiah",
+      "words": [
+        {
+          "w": "JEREMIAH",
+          "clue": "Prophet called as a youth"
+        },
+        {
+          "w": "BARUCH",
+          "clue": "Scribe who wrote down Jeremiah's words"
+        },
+        {
+          "w": "ANATHOTH",
+          "clue": "Home town of Jeremiah"
+        },
+        {
+          "w": "POTTER",
+          "clue": "Craftsman whose work illustrates God's hand"
+        },
+        {
+          "w": "ZEDEKIAH",
+          "clue": "Last king of Judah in Jeremiah's time"
+        },
+        {
+          "w": "EBEDMELECH",
+          "clue": "Ethiopian who rescued Jeremiah"
+        },
+        {
+          "w": "PASHUR",
+          "clue": "Priest who put Jeremiah in the stocks"
+        },
+        {
+          "w": "JEHOIAKIM",
+          "clue": "King who burned the roll"
+        },
+        {
+          "w": "BABYLON",
+          "clue": "Empire that besieged Jerusalem"
+        },
+        {
+          "w": "COVENANT",
+          "clue": "The new one God promised to write on hearts"
+        }
+      ]
+    },
+    {
+      "book": "Lamentations",
+      "title": "Words from Lamentations",
+      "words": [
+        {
+          "w": "LAMENT",
+          "clue": "What the book is made of"
+        },
+        {
+          "w": "ZION",
+          "clue": "The city whose ruin is mourned"
+        },
+        {
+          "w": "TEARS",
+          "clue": "Jeremiah's eyes ran with these"
+        },
+        {
+          "w": "SORROW",
+          "clue": "Feeling expressed throughout the book"
+        },
+        {
+          "w": "WIDOW",
+          "clue": "Jerusalem is described as one, in chapter one"
+        },
+        {
+          "w": "ACROSTIC",
+          "clue": "Form used in the Hebrew chapters"
+        },
+        {
+          "w": "MERCIES",
+          "clue": "They are new every morning"
+        },
+        {
+          "w": "FAITHFULNESS",
+          "clue": "Great is thy ___, the book says"
+        },
+        {
+          "w": "MORNING",
+          "clue": "Time when the mercies are new"
+        },
+        {
+          "w": "JEREMIAH",
+          "clue": "Traditional author of the book"
+        }
+      ]
+    },
+    {
+      "book": "Ezekiel",
+      "title": "Words from Ezekiel",
+      "words": [
+        {
+          "w": "EZEKIEL",
+          "clue": "Priest and prophet among the exiles"
+        },
+        {
+          "w": "CHERUBIM",
+          "clue": "Living creatures in Ezekiel's vision"
+        },
+        {
+          "w": "WHEEL",
+          "clue": "Part of the vision by the river Chebar"
+        },
+        {
+          "w": "GLORY",
+          "clue": "What departed from the temple"
+        },
+        {
+          "w": "CHEBAR",
+          "clue": "River by which the exiles lived"
+        },
+        {
+          "w": "VALLEY",
+          "clue": "Full of bones in the vision"
+        },
+        {
+          "w": "BONES",
+          "clue": "What lived again in the valley"
+        },
+        {
+          "w": "TEMPLE",
+          "clue": "Ezekiel's vision of a new one ends the book"
+        },
+        {
+          "w": "SIEGE",
+          "clue": "Ezekiel acted out one against Jerusalem"
+        },
+        {
+          "w": "BABYLON",
+          "clue": "Land where the exiles were taken"
+        }
+      ]
+    },
+    {
+      "book": "Hosea",
+      "title": "Words from Hosea",
+      "words": [
+        {
+          "w": "HOSEA",
+          "clue": "Prophet whose marriage was a message"
+        },
+        {
+          "w": "GOMER",
+          "clue": "Wife of Hosea"
+        },
+        {
+          "w": "JEZREEL",
+          "clue": "First child, named for a place of bloodshed"
+        },
+        {
+          "w": "LORUHAMAH",
+          "clue": "Daughter whose name means not pitied"
+        },
+        {
+          "w": "LOAMMI",
+          "clue": "Name meaning not my people"
+        },
+        {
+          "w": "EPHRAIM",
+          "clue": "Name used for the northern kingdom"
+        },
+        {
+          "w": "BAAL",
+          "clue": "Idol Israel went after"
+        },
+        {
+          "w": "MERCY",
+          "clue": "I desired this, and not sacrifice"
+        },
+        {
+          "w": "SACRIFICE",
+          "clue": "Less desired by God than mercy"
+        },
+        {
+          "w": "RETURN",
+          "clue": "Israel is called to do this to the LORD"
+        }
+      ]
+    },
+    {
+      "book": "Joel",
+      "title": "Words from Joel",
+      "words": [
+        {
+          "w": "JOEL",
+          "clue": "Prophet of the locust plague"
+        },
+        {
+          "w": "LOCUST",
+          "clue": "Swarm that devoured the land"
+        },
+        {
+          "w": "ZION",
+          "clue": "Blow the trumpet in this holy mountain"
+        },
+        {
+          "w": "SPIRIT",
+          "clue": "God will pour out his ___ on all flesh"
+        },
+        {
+          "w": "DREAMS",
+          "clue": "Old men shall dream these"
+        },
+        {
+          "w": "TRUMPET",
+          "clue": "Blow it in Zion, Joel says"
+        },
+        {
+          "w": "JEHOSHAPHAT",
+          "clue": "Valley where the nations are judged"
+        },
+        {
+          "w": "VALLEY",
+          "clue": "Place of decision, in chapter three"
+        },
+        {
+          "w": "DAY",
+          "clue": "The great and terrible ___ of the LORD"
+        },
+        {
+          "w": "EDOM",
+          "clue": "Nation that will be made a desolation"
+        }
+      ]
+    },
+    {
+      "book": "Amos",
+      "title": "Words from Amos",
+      "words": [
+        {
+          "w": "AMOS",
+          "clue": "Herdman prophet from the south"
+        },
+        {
+          "w": "TEKOA",
+          "clue": "Home town of Amos"
+        },
+        {
+          "w": "HERDMAN",
+          "clue": "Amos was one of these"
+        },
+        {
+          "w": "SYCOMORE",
+          "clue": "Tree that Amos tended"
+        },
+        {
+          "w": "PLUMBLINE",
+          "clue": "Measure in Amos's vision"
+        },
+        {
+          "w": "SUMMER",
+          "clue": "Season of the basket of fruit"
+        },
+        {
+          "w": "BETHEL",
+          "clue": "Shrine where Amos was opposed"
+        },
+        {
+          "w": "DAMASCUS",
+          "clue": "Capital that is judged in chapter one"
+        },
+        {
+          "w": "JUDGMENT",
+          "clue": "Let it run down as waters"
+        },
+        {
+          "w": "SAMARIA",
+          "clue": "Capital of the northern kingdom"
+        }
+      ]
+    },
+    {
+      "book": "Obadiah",
+      "title": "Words from Obadiah",
+      "words": [
+        {
+          "w": "OBADIAH",
+          "clue": "Shortest book in the Old Testament"
+        },
+        {
+          "w": "EDOM",
+          "clue": "Nation under judgment in this book"
+        },
+        {
+          "w": "ESAU",
+          "clue": "Ancestor of the Edomites"
+        },
+        {
+          "w": "JACOB",
+          "clue": "Brother of Esau"
+        },
+        {
+          "w": "MOUNT",
+          "clue": "Mount Zion and the mount of Esau"
+        },
+        {
+          "w": "SEIR",
+          "clue": "Mountain region of Edom"
+        },
+        {
+          "w": "TEMAN",
+          "clue": "Place whose wise men are mentioned"
+        },
+        {
+          "w": "SAVIOURS",
+          "clue": "They shall come up on mount Zion"
+        },
+        {
+          "w": "KINGDOM",
+          "clue": "The ___ shall be the LORD's"
+        },
+        {
+          "w": "PRIDE",
+          "clue": "The proud heart of Edom"
+        }
+      ]
+    },
+    {
+      "book": "Micah",
+      "title": "Words from Micah",
+      "words": [
+        {
+          "w": "MICAH",
+          "clue": "Prophet from a village in Judah"
+        },
+        {
+          "w": "BETHLEHEM",
+          "clue": "Ephratah, from which a ruler will come"
+        },
+        {
+          "w": "MORESHETH",
+          "clue": "Micah's home town"
+        },
+        {
+          "w": "SHEPHERD",
+          "clue": "He shall feed his flock like a ___"
+        },
+        {
+          "w": "WALK",
+          "clue": "To ___ humbly with your God"
+        },
+        {
+          "w": "HUMBLY",
+          "clue": "How to walk with God"
+        },
+        {
+          "w": "PLOUGHSHARES",
+          "clue": "Swords will be beaten into these"
+        },
+        {
+          "w": "MERCY",
+          "clue": "God delights in this"
+        },
+        {
+          "w": "SAMARIA",
+          "clue": "City that will be a heap of stones"
+        },
+        {
+          "w": "JERUSALEM",
+          "clue": "City that will be ploughed as a field"
+        }
+      ]
+    },
+    {
+      "book": "Nahum",
+      "title": "Words from Nahum",
+      "words": [
+        {
+          "w": "NAHUM",
+          "clue": "Prophet of the fall of a great city"
+        },
+        {
+          "w": "NINEVEH",
+          "clue": "City whose fall is announced"
+        },
+        {
+          "w": "ELKOSHITE",
+          "clue": "Nahum's home town"
+        },
+        {
+          "w": "ASSYRIA",
+          "clue": "Empire whose capital is Nineveh"
+        },
+        {
+          "w": "SLOW",
+          "clue": "The LORD is ___ to anger"
+        },
+        {
+          "w": "VENGEANCE",
+          "clue": "The LORD takes it on his adversaries"
+        },
+        {
+          "w": "CHARIOTS",
+          "clue": "Chariots rage in the streets, Nahum says"
+        },
+        {
+          "w": "STRONGHOLD",
+          "clue": "The LORD is a good one in the day of trouble"
+        },
+        {
+          "w": "ANGER",
+          "clue": "The LORD is slow to this"
+        },
+        {
+          "w": "GOOD",
+          "clue": "The LORD is ___ , a stronghold in trouble"
+        }
+      ]
+    },
+    {
+      "book": "Habakkuk",
+      "title": "Words from Habakkuk",
+      "words": [
+        {
+          "w": "HABAKKUK",
+          "clue": "Prophet who questioned God"
+        },
+        {
+          "w": "WATCH",
+          "clue": "Habakkuk stood on his ___ tower"
+        },
+        {
+          "w": "FAITH",
+          "clue": "The just shall live by his ___"
+        },
+        {
+          "w": "CHALDEANS",
+          "clue": "Bitter and hasty nation God raised up"
+        },
+        {
+          "w": "VISION",
+          "clue": "Write the ___ and make it plain"
+        },
+        {
+          "w": "TABLETS",
+          "clue": "Write the vision on these"
+        },
+        {
+          "w": "FIG",
+          "clue": "Tree that shall not blossom, in chapter three"
+        },
+        {
+          "w": "OLIVE",
+          "clue": "Tree that yields no fruit, in chapter three"
+        },
+        {
+          "w": "REJOICE",
+          "clue": "I will ___ in the LORD"
+        },
+        {
+          "w": "STRENGTH",
+          "clue": "The LORD God is my ___"
+        }
+      ]
+    },
+    {
+      "book": "Zephaniah",
+      "title": "Words from Zephaniah",
+      "words": [
+        {
+          "w": "ZEPHANIAH",
+          "clue": "Prophet who announced the day of the LORD"
+        },
+        {
+          "w": "JOSIAH",
+          "clue": "King in whose time Zephaniah prophesied"
+        },
+        {
+          "w": "HEZEKIAH",
+          "clue": "Great-grandfather of the prophet"
+        },
+        {
+          "w": "AMON",
+          "clue": "Father of Josiah"
+        },
+        {
+          "w": "REMNANT",
+          "clue": "A humble and poor one that will be left"
+        },
+        {
+          "w": "SINGING",
+          "clue": "The LORD will rest in his love, and joy over you with ___"
+        },
+        {
+          "w": "LANGUAGE",
+          "clue": "God will restore a pure one to the peoples"
+        },
+        {
+          "w": "DAY",
+          "clue": "The great ___ of the LORD is near"
+        },
+        {
+          "w": "JERUSALEM",
+          "clue": "City that is searched with lamps"
+        },
+        {
+          "w": "MEEKNESS",
+          "clue": "Seek this, perhaps you shall be hid"
+        }
+      ]
+    },
+    {
+      "book": "Haggai",
+      "title": "Words from Haggai",
+      "words": [
+        {
+          "w": "HAGGAI",
+          "clue": "Prophet who urged the temple to be rebuilt"
+        },
+        {
+          "w": "ZERUBBABEL",
+          "clue": "Governor who led the rebuilding"
+        },
+        {
+          "w": "JOSHUA",
+          "clue": "High priest with Zerubbabel"
+        },
+        {
+          "w": "SHEALTIEL",
+          "clue": "Father of Zerubbabel"
+        },
+        {
+          "w": "TEMPLE",
+          "clue": "House that was to be rebuilt"
+        },
+        {
+          "w": "CEILED",
+          "clue": "Houses that the people built for themselves"
+        },
+        {
+          "w": "CONSIDER",
+          "clue": "Consider your ways, says the LORD"
+        },
+        {
+          "w": "SILVER",
+          "clue": "The LORD's, and the gold"
+        },
+        {
+          "w": "GOLD",
+          "clue": "The LORD's, along with the silver"
+        },
+        {
+          "w": "SIGNET",
+          "clue": "Zerubbabel will be like this, God says"
+        }
+      ]
+    },
+    {
+      "book": "Zechariah",
+      "title": "Words from Zechariah",
+      "words": [
+        {
+          "w": "ZECHARIAH",
+          "clue": "Prophet who saw eight night visions"
+        },
+        {
+          "w": "ZERUBBABEL",
+          "clue": "Governor in the vision of the lampstand"
+        },
+        {
+          "w": "JOSHUA",
+          "clue": "High priest whose filthy garments were changed"
+        },
+        {
+          "w": "BRANCH",
+          "clue": "The LORD's servant, named this"
+        },
+        {
+          "w": "CANDLESTICK",
+          "clue": "Golden lampstand in one vision"
+        },
+        {
+          "w": "SHEPHERD",
+          "clue": "The smitten one whose sheep are scattered"
+        },
+        {
+          "w": "HORSES",
+          "clue": "Red, white and speckled ones in the first vision"
+        },
+        {
+          "w": "JERUSALEM",
+          "clue": "City that will be a cup of trembling"
+        },
+        {
+          "w": "KING",
+          "clue": "Behold, thy ___ cometh unto thee, just and having salvation"
+        },
+        {
+          "w": "SILVER",
+          "clue": "Thirty pieces of this were weighed"
+        }
+      ]
+    },
+    {
+      "book": "Malachi",
+      "title": "Words from Malachi",
+      "words": [
+        {
+          "w": "MALACHI",
+          "clue": "Last of the Old Testament prophets, by name"
+        },
+        {
+          "w": "TITHES",
+          "clue": "Bring all of these into the storehouse"
+        },
+        {
+          "w": "STOREHOUSE",
+          "clue": "Place to which the tithes are brought"
+        },
+        {
+          "w": "COVENANT",
+          "clue": "The covenant of Levi"
+        },
+        {
+          "w": "SUN",
+          "clue": "The ___ of righteousness shall arise with healing"
+        },
+        {
+          "w": "ELIJAH",
+          "clue": "Prophet sent before the great day"
+        },
+        {
+          "w": "LEVI",
+          "clue": "Tribe whose covenant of life is recalled"
+        },
+        {
+          "w": "OFFERING",
+          "clue": "Offer a pure one to the LORD"
+        },
+        {
+          "w": "REFINER",
+          "clue": "Like a fire, and like the fuller's soap"
+        },
+        {
+          "w": "FULLER",
+          "clue": "Cleanser whose soap is mentioned"
+        }
+      ]
+    },
+    {
+      "book": "2 Peter",
+      "title": "Words from 2 Peter",
+      "words": [
+        {
+          "w": "PETER",
+          "clue": "Writer of this letter"
+        },
+        {
+          "w": "KNOWLEDGE",
+          "clue": "Grace and peace be multiplied through this"
+        },
+        {
+          "w": "CORRUPTION",
+          "clue": "Escape the ___ that is in the world"
+        },
+        {
+          "w": "PROPHECY",
+          "clue": "No ___ came by the will of man"
+        },
+        {
+          "w": "SODOM",
+          "clue": "City condemned to ashes"
+        },
+        {
+          "w": "GOMORRAH",
+          "clue": "City destroyed with Sodom"
+        },
+        {
+          "w": "LOT",
+          "clue": "Righteous man delivered from Sodom"
+        },
+        {
+          "w": "BALAAM",
+          "clue": "Prophet who loved the wages of unrighteousness"
+        },
+        {
+          "w": "SCOFFERS",
+          "clue": "They will come in the last days, saying where is the promise"
+        },
+        {
+          "w": "VIRTUE",
+          "clue": "Add this to your faith"
+        }
+      ]
+    },
+    {
+      "book": "1 John",
+      "title": "Words from 1 John",
+      "words": [
+        {
+          "w": "JOHN",
+          "clue": "Writer of this letter"
+        },
+        {
+          "w": "LIGHT",
+          "clue": "God is this, and in him is no darkness"
+        },
+        {
+          "w": "LOVE",
+          "clue": "God is this"
+        },
+        {
+          "w": "ABIDE",
+          "clue": "Let that which you heard from the beginning ___ in you"
+        },
+        {
+          "w": "ANTICHRIST",
+          "clue": "Many have come in the spirit of this"
+        },
+        {
+          "w": "TRUTH",
+          "clue": "We walk in this"
+        },
+        {
+          "w": "SIN",
+          "clue": "If we say we have no ___, we deceive ourselves"
+        },
+        {
+          "w": "FELLOWSHIP",
+          "clue": "We have it with the Father and the Son"
+        },
+        {
+          "w": "COMMANDMENTS",
+          "clue": "We know we know him if we keep these"
+        },
+        {
+          "w": "BELIEVE",
+          "clue": "Whosoever believeth that Jesus is the Christ is born of God"
+        }
+      ]
+    },
+    {
+      "book": "2 John",
+      "title": "Words from 2 John",
+      "words": [
+        {
+          "w": "ELECT",
+          "clue": "The elect lady and her children"
+        },
+        {
+          "w": "LADY",
+          "clue": "The letter is addressed to an elect one"
+        },
+        {
+          "w": "TRUTH",
+          "clue": "Those who know the ___ love the children of God"
+        },
+        {
+          "w": "COMMANDMENT",
+          "clue": "Walk after his commandments; this is the ___"
+        },
+        {
+          "w": "LOVE",
+          "clue": "Walk in it, says the letter"
+        },
+        {
+          "w": "DECEIVERS",
+          "clue": "Many of these are entered into the world"
+        },
+        {
+          "w": "ANTICHRIST",
+          "clue": "Deceivers who deny Jesus Christ come in the flesh are this"
+        },
+        {
+          "w": "DOCTRINE",
+          "clue": "Whoever abides not in the ___ of Christ does not have God"
+        },
+        {
+          "w": "PAPER",
+          "clue": "John would rather write by ink and ___"
+        },
+        {
+          "w": "WALK",
+          "clue": "Walk after his commandments"
+        }
+      ]
+    },
+    {
+      "book": "Jude",
+      "title": "Words from Jude",
+      "words": [
+        {
+          "w": "JUDE",
+          "clue": "Writer of this letter"
+        },
+        {
+          "w": "ENOCH",
+          "clue": "Seventh from Adam, who prophesied"
+        },
+        {
+          "w": "MICHAEL",
+          "clue": "Archangel who disputed about the body of Moses"
+        },
+        {
+          "w": "CAIN",
+          "clue": "Went in the way of this man"
+        },
+        {
+          "w": "KORAH",
+          "clue": "Rebel who perished in the gainsaying"
+        },
+        {
+          "w": "BALAAM",
+          "clue": "Ran greedily after the error of this man"
+        },
+        {
+          "w": "BELOVED",
+          "clue": "Dear friends are called this"
+        },
+        {
+          "w": "CONTEND",
+          "clue": "Earnestly ___ for the faith"
+        },
+        {
+          "w": "MERCY",
+          "clue": "Mercy, peace and love be multiplied; and ___ to you"
+        },
+        {
+          "w": "DREAMERS",
+          "clue": "Filthy ___ who defile the flesh"
+        }
+      ]
+    },
+    {
+      "book": "3 John",
+      "title": "Words from 3 John",
+      "words": [
+        {
+          "w": "GAIUS",
+          "clue": "The beloved man to whom John writes"
+        },
+        {
+          "w": "DIOTREPHES",
+          "clue": "Church leader who loved the preeminence"
+        },
+        {
+          "w": "DEMETRIUS",
+          "clue": "Man well reported of by all"
+        },
+        {
+          "w": "TRUTH",
+          "clue": "Walk in it, John says"
+        },
+        {
+          "w": "STRANGERS",
+          "clue": "Those who were received, though unknown, by Gaius"
+        },
+        {
+          "w": "ELDER",
+          "clue": "The writer calls himself this"
+        },
+        {
+          "w": "BRETHREN",
+          "clue": "The travelling believers who were received"
+        },
+        {
+          "w": "PREEMINENCE",
+          "clue": "What Diotrephes loved to have"
+        },
+        {
+          "w": "CHILDREN",
+          "clue": "John has no greater joy than to hear his ___ walk in truth"
+        },
+        {
+          "w": "GOOD",
+          "clue": "Follow not that which is evil, but that which is ___"
+        }
+      ]
+    }
+  ]
+}

@@ -3,7 +3,7 @@
     {"book":"Numbers","ref":"Numbers 13:25-33","title":"The spies bring back a report",
      "elements":[
        {"label":"The spies returned after forty days","keys":["forty"]},
-       {"label":"They carried a cluster of grapes on a pole","keys":["grape","cluster","pole"]},
+       {"label":"They showed the people the fruit of the land, including a cluster of grapes","keys":["fruit","grape","cluster"]},
        {"label":"The land flowed with milk and honey","keys":["milk","honey"]},
        {"label":"The people there were giants, and the spies felt like grasshoppers","keys":["giant","grasshopper"]},
        {"label":"Caleb said they should go up and take the land","keys":["caleb","go up"]}],

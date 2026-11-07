@@ -55,11 +55,19 @@ The **home page** shows the games in a **2 x 2 grid**, and each card lists its f
 
 Tap a game to open its **game page**. It explains the game, lists how to play, and shows its formats. Choose a format, then tap **Start**.
 
+After you start, choose what to play:
+
+- **Random from the whole Bible**: questions drawn from all 66 books.
+- **Random from the New Testament** or **Random from the Old Testament**: questions drawn from that part of the Bible.
+- **Choose book(s)**: tap one or more books, then start. Greyed-out books have no questions for that game yet.
+
+A random option is greyed out when a game has no questions in that part of the Bible.
+
 **Steps:**
 1. Open Wordplay and enter your name. Choose an avatar (twelve Bible characters) and your interface language.
 2. Pick a game from the home page, using a filter if you want.
 3. Read the game page and choose a format.
-4. Choose a Testament and a book (not needed for Covenant Quest).
+4. Choose what to play: random from the whole Bible, the New or Old Testament, or one or more books (not needed for Covenant Quest).
 5. Play. Follow the instructions on screen.
 6. At the end, write a short **Heart** reflection (private to you and your group or mentor), and choose a **Hands** mission for the week.
 7. Review the **Answers** list to see each question with the correct answer.
@@ -142,6 +150,10 @@ Audio and video need the content to be set up by the project team. See [DEPLOYME
 
 ---
 
+## About page
+
+The **About** page, in the menu, gives the same information as this README: the games, how to play, difficulty, Bible text, languages, offline use, privacy, the content disclaimer, known limits, licence and credits.
+
 ## Installing and offline use
 
 Wordplay is a **Progressive Web App**. To install it:
@@ -156,10 +168,11 @@ Once installed, the game screens and the built-in King James Version open **with
 
 ## Privacy and data
 
-- **Your progress stays on your device.** Profiles, points, history and the leaderboard are stored in your browser. There are no accounts on a server.
+- **Your progress stays on your device** unless you choose to share it. Profiles, points and history are stored in your browser.
+- **Shared leaderboard is optional.** If you agree, your nickname, level and points are shown to everyone who opens the shared leaderboard. Your real name is never shown or sent. You can stop sharing at any time, which removes your score.
 - **Anonymous usage sharing is off until you agree.** The first time you open the home page, you can choose **Yes** or **No thanks**. You can change your choice on the Progress screen at any time.
 - **What is shared, if you agree:** which game and format was started or finished, the level, and the points earned by that game. Names, avatars and anything typed are never sent.
-- **Under 13:** please ask a parent or teacher before you agree.
+- **Under 13:** please ask a parent or teacher before you agree to share anything.
 - **Where it goes:** Google Analytics, through Firebase, for the project owner to see totals. Google Signals and ad personalisation are switched off.
 - **Bible Brain:** the key you type for Bible downloads is used only to fetch the text, and is not saved. Bible text is stored on your device.
 - **Export or delete:** use **Export my progress** to keep a copy of your progress. Clearing the site's data in your browser removes everything on the device.
@@ -183,6 +196,13 @@ Wordplay is a learning tool. Its questions, clues, passages and summaries are wr
 
 ---
 
+## Coming soon
+
+- **Games in other languages.** Scripture-based games in any Bible will come first, then full translation packs. Partner input is needed to translate the questions and check them for accuracy. See [ROADMAP.md](ROADMAP.md) and [content/languages/README.md](content/languages/README.md) if you would like to help.
+- **Audio and video**, which need partner input for licences and recordings.
+
+---
+
 ## Known limits
 
 - Only **Echo** uses the chosen Bible text. The other games use built-in English.
@@ -194,18 +214,21 @@ Wordplay is a learning tool. Its questions, clues, passages and summaries are wr
   |---|---|
   | Memory Verse | 66 |
   | Bible Trivia | 66 (3 John has nine questions; one comes from another book) |
-  | Who Said It | 22 (generated from the text) |
-  | Echo | 30 |
-  | Bible Characters | 40 |
+  | Who Said It | 22 (generated from the text, and some written by hand) |
+  | Echo | 66 |
+  | Bible Characters | 41 |
   | Bible Crossword | 45 |
   | Word Search | 45 |
   | Scene Detective | 4 |
-  | Story Builder | 1 (Luke) |
+  | Story Builder | 22 |
   | Covenant Quest | Its 12 clips (no book choice) |
+
+  The full coverage against the minimum for each game is in `content/coverage-report.md`.
 
   Memory Verse, Bible Trivia and Who Said It questions are generated from the King James text, so they test wording and reference rather than deep knowledge. Echo, Bible Characters, Bible Crossword, Word Search, Scene Detective and Story Builder are written by hand, and cover only the books listed above. Bible Characters includes Torah, Judges, Samuel, Kings, Chronicles and Ezra-Nehemiah, and Bible Crossword and Word Search cover all the Gospels, Acts and the Pauline letters. More books are added in batches. Books without questions for a game are greyed out in its book picker. Bible Characters has one to three characters per book, so a round can be short.
 - **Bible Brain downloads** take several minutes for a full Bible, because each chapter is requested separately.
-- **Leaderboards** rank the players on one device only.
+- **Shared leaderboard** shows the top 20 scores. It has no moderation tools yet, so report any unsuitable nickname to the project owner.
+- **Scores** are calculated on each device, so a determined player could submit a higher score. The rules check the format and the range of values, not the honesty of the score.
 - **Sign-in** is choosing a player on the device. It is not password-protected.
 - **Progress is saved on the device only.** Use **Export my progress** on the Progress screen to keep a copy. If the browser storage is full, the game tells you.
 - **Bible Brain** must be used within its terms and the licence of each Bible.
@@ -219,6 +242,11 @@ Wordplay is a learning tool. Its questions, clues, passages and summaries are wr
 - **[DEVELOPER.md](DEVELOPER.md):** how the project is organised, the configuration, and how to add games, languages and content.
 - **[media-server/README.md](media-server/README.md):** the optional media proxy for streamed audio and video.
 - **[LICENSE](LICENSE):** the MIT licence.
+- **[FIREBASE-SETUP.md](FIREBASE-SETUP.md):** how to set up the shared leaderboard and analytics in Firebase, and how to check it.
+- **[ROADMAP.md](ROADMAP.md):** planned features, and where partner input is needed.
+- **[content/languages/README.md](content/languages/README.md):** how partners can create a language pack.
+- **Coverage report:** `content/coverage-report.md` shows, for each game, how many books meet the minimum number of questions, and which books are short.
+- **Question list:** `content/question-list.csv` lists every question, clue and word for partner review, and `content/question-summary.md` gives the totals by game and by book. Both are generated by `scripts/export_question_list.py`.
 
 ---
 

@@ -54,6 +54,12 @@ jobs:
           python3 scripts/merge_extra_content.py
           git diff --exit-code content/extra-bank.json
 
+      - name: Echo keywords match the King James text
+        run: python3 scripts/check_echo_keys.py
+
+      - name: Report minimum questions per book (information only)
+        run: python3 scripts/coverage_check.py
+
       - name: Install the browser for tests
         run: |
           pip install playwright
@@ -68,6 +74,10 @@ jobs:
           python3 tests/deep_check.py
           python3 tests/safety_check.py
           python3 tests/analytics_check.py
+          python3 tests/leaderboard_check.py
+          python3 tests/about_check.py
+          python3 tests/scope_check.py
+          python3 tests/names_check.py
 
   deploy:
     needs: test

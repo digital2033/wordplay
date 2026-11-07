@@ -161,6 +161,30 @@ Before a release, also play one game on a real phone, install the app and open i
 
 ---
 
+## Question list for review
+
+- `python3 scripts/export_question_list.py` reads every bank from the game in a headless browser, and writes `content/question-list.csv` (one row per question, clue, word or prompt) and `content/question-summary.md`.
+- Run it after any content change, and commit the two files. The workflow does not check them, so they may lag behind the code if you forget.
+- The crossword and word-search games share one word bank, so each word is counted once in the list, and used by both games.
+
+## Echo and Who Said It, checked against the text
+
+- `python3 scripts/check_echo_keys.py` checks every Echo passage against the embedded King James text: the reference must exist, and each element needs at least one keyword that appears in those verses. The publishing workflow runs it as a required step.
+- Who Said It entries (`who` in the content files) name the verse and the speaker. The quotation is taken from the King James text, and the merge stops if the speaker is not named in that verse.
+
+## Minimum questions per book
+
+- `python3 scripts/coverage_check.py` reads `content/question-list.csv` and writes `content/coverage-report.md`. It lists, for each game, the books that do not reach the minimum.
+- The minimums and the exemptions (books without named people, without a narrative, or without speakers) are proposals at the top of the script. Agree them with the partner reviewers, then change the script.
+- Run `scripts/export_question_list.py` before `coverage_check.py`, so the report matches the content.
+- Add `--strict` to fail when Bible Trivia, Memory Verse, the crossword lists or Echo are short. The publishing workflow reports only.
+
+## Shared leaderboard
+
+- `publishScore()` writes the player's nickname, points, level, games and a server timestamp to `scores/<browserId>_<playerId>`, only after the player agrees.
+- `firestore.rules` allows only the owner to write, checks the fields and ranges, and allows everyone to read. Test rule changes with the Firebase emulator before publishing.
+- The browser ID comes from anonymous sign-in. Clearing the browser's data creates a new ID, which leaves the old entry behind until the player stops sharing from a device that still has it.
+
 ## Analytics
 
 - `track(name, params)` sends an event only when `DB.settings.analytics === "yes"`. Events are sent by `loadAnalytics()`, which imports Firebase from gstatic (pinned in `FIREBASE_VERSION`) the first time.

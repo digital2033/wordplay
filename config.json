@@ -25,5 +25,9 @@
     "audio": false,
     "video": false,
     "note": "Audio and video games are coming soon. Set to true once audio or video content is connected."
+  },
+  "about": {
+    "contactEmail": "",
+    "note": "Set contactEmail to show a contact address on the About page."
   }
 }

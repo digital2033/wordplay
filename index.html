@@ -105,6 +105,7 @@ textarea.tx-answers{min-height:44px}
 .chip em{font-style:normal;font-size:.75rem;margin-left:4px}
 .sel{width:100%;font:inherit;padding:8px;border-radius:8px;border:1px solid rgba(127,127,127,.4);background:var(--bg);color:var(--ink)}
 .skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}.skip-link:focus{left:8px;top:8px;width:auto;height:auto;overflow:visible;z-index:99;background:#fff;color:#000;padding:8px 12px;border-radius:8px}
+.scope-grid{display:grid;gap:10px}.scope-btn{text-align:left;padding:14px 16px;border-radius:14px;font:inherit;background:var(--bg);color:var(--ink);border:1px solid rgba(127,127,127,.35)}.scope-btn small{display:block;opacity:.75;margin-top:4px;font-size:.85rem}.scope-btn:disabled{opacity:.45;cursor:not-allowed}.tile.on{outline:2px solid var(--accent);font-weight:700}
 </style>
 </head>
 <body>
@@ -546,13 +547,12 @@ const LISTENING = [
 
 /* Selects content: selected book first, then same testament, then all */
 function pool(items, n){
-  const b = items.filter(i => i.book === ctx.book);
-  const t = items.filter(i => i.book !== ctx.book && TEST(i.book) === ctx.testament);
-  const o = items.filter(i => TEST(i.book) !== ctx.testament);
-  return [...b, ...t, ...o].slice(0, n);
+  const b = shuffleArr(items.filter(i => inScope(i.book)));
+  const o = shuffleArr(items.filter(i => !inScope(i.book)));
+  return [...b, ...o].slice(0, n);
 }
 function notice(picked){
-  const off = [...new Set(picked.filter(i => i.book !== ctx.book).map(i => i.book))];
+  const off = [...new Set(picked.filter(i => !inScope(i.book)).map(i => i.book))];
   if(!off.length) return "";
   return `<p class="muted">${T("notice")} ${off.join(", ")}.</p>`;
 }
@@ -595,7 +595,20 @@ function exportProgress(){
 }
 let DB = loadDB();
 DB.settings = DB.settings || { bibleLang: "en" };
-let ctx = { book:"Genesis", testament:"OT" };
+let ctx = { scope:"books", books:["Genesis"], book:"Genesis", testament:"OT" };
+/* Scope of the current game: "all" (whole Bible), "OT", "NT", or "books" (the list in ctx.books) */
+function inScope(name){
+  if(!ctx.scope) return name === ctx.book;   // older callers that set only a book
+  if(ctx.scope === "all") return true;
+  if(ctx.scope === "OT" || ctx.scope === "NT") return TEST(name) === ctx.scope;
+  return (ctx.books || []).indexOf(name) >= 0;
+}
+function scopeLabel(){
+  if(ctx.scope === "all") return "Whole Bible (random)";
+  if(ctx.scope === "OT") return "Old Testament (random)";
+  if(ctx.scope === "NT") return "New Testament (random)";
+  return (ctx.books || []).join(", ");
+}
 let quizTeams = [], quizScores = {}, quizIdx = 0, quizTimer = null, quizRounds = [];
 
 /* ============================================================
@@ -706,7 +719,7 @@ function paintHeader(){
   if(!p){ who.innerHTML = ""; nav.innerHTML = ""; return; }
   const st = statsFor(p.id), li = levelInfo(st.points);
   who.innerHTML = `<span class="avatar-chip">${avatarHTML(p.avatar)}</span><span>${escapeHtml(p.name)}</span><span>${li.cur.icon} ${li.cur.name}</span>`;
-  const items = [["home",T("home")],["progress",T("progress")],["board",T("board")],["profile",T("profile")],["logout",T("logout")]];
+  const items = [["home",T("home")],["progress",T("progress")],["board",T("board")],["profile",T("profile")],["about","About"],["logout",T("logout")]];
   nav.innerHTML = items.map(([k,l]) => `<button class="${window.currentView===k?'on':''}" onclick="go('${k}')">${l}</button>`).join("");
 }
 window.currentView = "home";
@@ -716,6 +729,7 @@ function go(view){
   if(view === "play") return showPlay();
   if(view === "progress") return showProgress();
   if(view === "board") return showBoard();
+  if(view === "about") return showAbout();
   if(view === "profile") return showProfile(false);
   if(view === "logout") return logout();
 }
@@ -739,7 +753,7 @@ function showProfile(isNew){
       <label><strong>${T("name")}</strong></label>
       <input type="text" id="pf-name" value="${escapeHtml(name)}" maxlength="24" placeholder="e.g. Grace Runner">
       <p><strong>${T("avatar")}</strong></p>
-      <div class="avatars" id="pf-av">${AVATARS.map(a => `<div class="av-wrap"><button class="av ${a===pendingAvatar?'sel':''}" data-a="${a}" title="${AVATAR_NAMES[a]}">${avatarHTML(a)}</button><div class="av-name">${AVATAR_NAMES[a]}</div></div>`).join("")}</div>
+      <div class="avatars" id="pf-av">${AVATARS.map(a => `<div class="av-wrap"><button class="av ${a===pendingAvatar?'sel':''}" data-a="${a}" title="${AVATAR_NAMES[a]}">${avatarHTML(a)}</button></div>`).join("")}</div>
       <p><strong>${T("language")}</strong></p>
       <select id="pf-lang" style="width:100%;font:inherit;padding:10px;border-radius:8px;border:1px solid rgba(127,127,127,.4);background:var(--bg);color:var(--ink)">${Object.entries(LANGS).map(([k,l]) => `<option value="${k}" ${k===pendingLang?'selected':''}>${l}</option>`).join("")}</select>
       <div style="margin-top:12px"><button id="pf-save">${T("save")}</button>${!isNew && p ? `<button class="alt" onclick="go('home')">${T("back")}</button>` : ""}</div>
@@ -793,10 +807,11 @@ function finishModule(name, head, max, hh){
   const points = ATTEND_POINTS + Math.round(head * lvl().bonus) + (heart ? HEART_POINTS : 0) + (hands ? HANDS_POINTS : 0);
   DB.sessions.push({
     id: "s" + Date.now(), pid: p.id, date: new Date().toISOString(),
-    module: name, book: ctx.book, testament: ctx.testament,
+    module: name, book: scopeLabel(), testament: ctx.testament || "",
     lang: p.lang, head, max, heart, hands, points, level: levelName()
   });
   saveDB();
+  publishScore();
   const st = statsFor(p.id), li = levelInfo(st.points);
   const newBadges = BADGES.filter(b => !before.includes(b.id) && b.test(st));
   newBadges.forEach(b => setTimeout(()=>toast(`${b.icon} ${T("unlocked")}: ${b.name}`), 300));
@@ -811,7 +826,7 @@ function finishModule(name, head, max, hh){
       <div class="xp"><div style="width:${li.pct}%"></div></div>
       ${newBadges.length ? `<p><strong>${T("unlocked")}</strong></p><div class="badges">${newBadges.map(b=>`<div class="bt"><div class="ico">${b.icon}</div>${b.name}</div>`).join("")}</div>` : ""}
       <div style="margin-top:12px">
-        <button onclick="startModule('${ctx.book.replace(/'/g,"\\'")}')">${T("playAgain")}</button>
+        <button onclick="replayGame()"\\'")}')">${T("playAgain")}</button>
         <button class="alt" onclick="go('progress')">${T("progress")}</button>
         <button class="alt" onclick="go('home')">${T("home")}</button>
       </div>
@@ -871,11 +886,13 @@ function showBoard(){
       <span class="badge b-game">${T("board")}</span>
       <h2>${T("rank")} ${myRank || "-"}</h2>
       ${statusCard(me)}
+      ${sharedCard()}
       <p class="muted">${T("boardNote")}</p>
       ${rows.length ? `<table><thead><tr><th>${T("rank")}</th><th>Player</th><th>${T("level")}</th><th>${T("games")}</th><th>${T("points")}</th></tr></thead><tbody>
         ${rows.map((r,i) => `<tr style="${r.p.id===me?'font-weight:700;color:var(--accent)':''}"><td>${i+1}</td><td>${avatarHTML(r.p.avatar)} ${escapeHtml(r.p.name)}</td><td>${r.level.icon} ${r.level.name}</td><td>${r.games}</td><td>${r.points}</td></tr>`).join("")}
       </tbody></table>` : `<p class="muted">${T("noHistory")}</p>`}
     </div>`;
+  if(sharedOn()) loadTopScores();
   paintHeader();
 }
 
@@ -1310,8 +1327,8 @@ function shuffleArr(a){
 }
 let bq = null;
 function runBibleQuiz(){
-  const same = shuffleArr(BIBLE_QUIZ.filter(q => TEST(q.book) === ctx.testament));
-  const other = shuffleArr(BIBLE_QUIZ.filter(q => TEST(q.book) !== ctx.testament));
+  const same = shuffleArr(BIBLE_QUIZ.filter(q => inScope(q.book)));
+  const other = shuffleArr(BIBLE_QUIZ.filter(q => !inScope(q.book)));
   bq = { deck: quizDeck(), i: 0, lives: lvl().lives, correct: 0, fifty: lvl().lifelines > 0, hint: lvl().hints > 0, cur: null };
   stage().innerHTML = `
     <div class="card">
@@ -1424,9 +1441,9 @@ const BIBLE_CHARS = [
 const CHAR_ROUND = 5;
 let bc = null;
 function runCharacters(){
-  const same = shuffleArr(BIBLE_CHARS.filter(c => TEST(c.book) === ctx.testament));
-  const other = shuffleArr(BIBLE_CHARS.filter(c => TEST(c.book) !== ctx.testament));
-  bc = { deck: shuffleArr(BIBLE_CHARS.filter(c => c.book === ctx.book)).slice(0, CHAR_ROUND), i: 0, lives: lvl().lives, points: 0, shown: 1, solved: false, wrong: [], options: null };
+  const same = shuffleArr(BIBLE_CHARS.filter(c => inScope(c.book)));
+  const other = shuffleArr(BIBLE_CHARS.filter(c => !inScope(c.book)));
+  bc = { deck: shuffleArr(BIBLE_CHARS.filter(c => inScope(c.book))).slice(0, CHAR_ROUND), i: 0, lives: lvl().lives, points: 0, shown: 1, solved: false, wrong: [], options: null };
   stage().innerHTML = `
     <div class="card">
       <span class="badge b-game">Bible Characters</span>
@@ -1827,8 +1844,8 @@ function textIntro(name, body, onStart){
   document.getElementById("ti-go").onclick = onStart;
 }
 function deckForTrivia(){
-  const same = shuffleArr(BIBLE_QUIZ.filter(q => TEST(q.book) === ctx.testament));
-  const other = shuffleArr(BIBLE_QUIZ.filter(q => TEST(q.book) !== ctx.testament));
+  const same = shuffleArr(BIBLE_QUIZ.filter(q => inScope(q.book)));
+  const other = shuffleArr(BIBLE_QUIZ.filter(q => !inScope(q.book)));
   return quizDeck();
 }
 
@@ -2003,8 +2020,8 @@ function runTriviaText(){
 
 /* 8. Bible Characters (Text): read clues, type the name */
 function runCharactersText(){
-  const deck = shuffleArr(BIBLE_CHARS.filter(c => TEST(c.book) === ctx.testament)).concat(shuffleArr(BIBLE_CHARS.filter(c => TEST(c.book) !== ctx.testament)));
-  const chars = shuffleArr(BIBLE_CHARS.filter(c => c.book === ctx.book)).slice(0, CHAR_ROUND);
+  const deck = shuffleArr(BIBLE_CHARS.filter(c => inScope(c.book))).concat(shuffleArr(BIBLE_CHARS.filter(c => !inScope(c.book))));
+  const chars = shuffleArr(BIBLE_CHARS.filter(c => inScope(c.book))).slice(0, CHAR_ROUND);
   let lives = lvl().lives, points = 0;
   const end = () => withHH("Bible Characters (Text)", points, chars.length * 5,
     `You scored ${points} of ${chars.length * 5} points. Which character from today encouraged you most?`,
@@ -2215,6 +2232,7 @@ function home(){
       <p class="muted" style="font-size:.8rem">Easy: 5 lives, 3 options, shorter puzzles, and Echo key points. Medium: 3 lives. Hard: 1 life, no lifelines, the longest puzzles, and double Head points.</p>
       <p class="muted" style="font-size:.8rem">Content is written for learning and is being reviewed by partners. Check any passage against your own Bible. Bible text: King James Version (public domain).</p>
       ${consentCard()}
+      <p class="muted" style="font-size:.85rem"><strong>Coming soon:</strong> games in other languages. Partner input is needed to translate the questions. See the roadmap in the project documents.</p>
       <h2>Games</h2>
       <div class="chips">
         <button class="chip" data-f="all" onclick="setFilter('all')">All</button>
@@ -2265,7 +2283,8 @@ function pickFormat(k){
 function playGame(){
   track("game_started", { game: GAMES[pickingGame].title, format: typeof pickingFormat !== "undefined" ? pickingFormat : "", level: levelName() });
   if(GAMES[pickingGame].noBook) return startModule("Genesis");
-  renderBookPicker();
+  pickingBooks = [];
+  renderScopePicker();
 }
 let pickingTest = "OT";
 function gameBankFor(gameId){
@@ -2279,30 +2298,66 @@ function gameBankFor(gameId){
 function booksWithContent(gameId){
   return new Set(gameBankFor(gameId).map(x => x.book));
 }
+let pickingBooks = [];
+/* Step 1 of a game: what to play */
+function renderScopePicker(){
+  const g = GAMES[pickingGame];
+  const bank = gameBankFor(g.id);
+  const has = (test) => bank.some(x => test(x.book));
+  const option = (scope, title, sub, ok) => ok
+    ? `<button class="scope-btn" onclick="startScope('${scope}', [])">${title}<small>${sub}</small></button>`
+    : `<button class="scope-btn" disabled title="No questions yet">${title}<small>No questions for this game yet</small></button>`;
+  stage().innerHTML = `
+    <div class="card">
+      <span class="badge b-game">${g.title}</span>
+      <h2>Choose what to play</h2>
+      <div class="scope-grid">
+        ${option("all", "Random from the whole Bible", "Questions drawn from all 66 books", has(() => true))}
+        ${option("NT", "Random from the New Testament", "Questions drawn from the 27 New Testament books", has(b => TEST(b) === "NT"))}
+        ${option("OT", "Random from the Old Testament", "Questions drawn from the 39 Old Testament books", has(b => TEST(b) === "OT"))}
+        <button class="scope-btn" onclick="renderBookPicker()">Choose book(s)<small>Pick one or more books yourself</small></button>
+      </div>
+      <div style="margin-top:12px"><button class="alt" onclick="renderDetail()">${T("back")}</button></div>
+    </div>`;
+  paintHeader();
+}
+/* Step 2 (only for "Choose book(s)"): tick one or more books, then start */
+function toggleBook(name){
+  const i = pickingBooks.indexOf(name);
+  if(i >= 0) pickingBooks.splice(i, 1); else pickingBooks.push(name);
+  renderBookPicker();
+}
 function renderBookPicker(){
   const g = GAMES[pickingGame];
   const list = pickingTest === "OT" ? OT_BOOKS : NT_BOOKS;
   const has = booksWithContent(g.id);
   const count = list.filter(b => has.has(b)).length;
+  const chosen = pickingBooks.filter(b => has.has(b));
   stage().innerHTML = `
     <div class="card">
       <span class="badge b-game">${g.title}</span>
       <h2>${T("chooseBook")}</h2>
-      <p class="muted">${count} of ${list.length} books have questions for ${g.title}. The others are greyed out.</p>
+      <p class="muted">${count} of ${list.length} books have questions for ${g.title}. Tap books to select one or more. Greyed-out books have no questions yet.</p>
       <div class="chips">
         <button class="chip ${pickingTest === "OT" ? "on" : ""}" onclick="setTest('OT')">${T("ot")}</button>
         <button class="chip ${pickingTest === "NT" ? "on" : ""}" onclick="setTest('NT')">${T("nt")}</button>
       </div>
       <div class="grid" style="margin-top:10px">${list.map(b => has.has(b)
-        ? `<button class="tile" onclick="startModule('${b.replace(/'/g, "\\'")}')">${b}</button>`
+        ? `<button class="tile ${pickingBooks.indexOf(b) >= 0 ? "on" : ""}" aria-pressed="${pickingBooks.indexOf(b) >= 0}" onclick="toggleBook('${b.replace(/'/g, "\\'")}')">${b}</button>`
         : `<button class="tile" disabled title="No questions for this book yet" style="opacity:.4;cursor:not-allowed">${b}</button>`).join("")}</div>
-      <div style="margin-top:12px"><button class="alt" onclick="renderDetail()">${T("back")}</button></div>
+      <div style="margin-top:14px">
+        <button ${chosen.length ? "" : "disabled"} onclick="startScope('books', pickingBooks.slice())">Start with ${chosen.length} book${chosen.length === 1 ? "" : "s"}</button>
+        <button class="alt" onclick="renderScopePicker()">${T("back")}</button>
+      </div>
     </div>`;
   paintHeader();
 }
+function replayGame(){ startScope(ctx.scope, (ctx.books || []).slice()); }
 function setTest(t){ pickingTest = t; renderBookPicker(); }
-function startModule(book){
-  ctx = { book, testament: TEST(book) };
+function startModule(book){ startScope("books", [book]); }
+function startScope(scope, books){
+  const list = books || [];
+  ctx = { scope, books: list, book: list[0] || null, testament: (scope === "OT" || scope === "NT") ? scope : (list[0] ? TEST(list[0]) : null) };
   quizIdx = 0;
   window.currentView = "play";
   const g = GAMES[pickingGame];
@@ -2363,7 +2418,184 @@ function runMemoryAudio(){
   document.getElementById("mva-go").onclick = () => runMemoryText();
 }
 
-  /* ===== ANONYMOUS ANALYTICS (Firebase), only after the player or a parent agrees =====
+  /* ===== ABOUT PAGE ===== */
+function showAbout(){
+  const contact = (APP_CONFIG && APP_CONFIG.about && APP_CONFIG.about.contactEmail) || "";
+  document.getElementById("stage").innerHTML = `
+    <div class="card about">
+      <span class="badge b-game">About</span>
+      <h2>About Wordplay</h2>
+      <p><strong>Play - Feel - Live.</strong> Wordplay is a Scripture Engagement game. Players read, listen, watch and play their way through the Bible, and every game ends with <strong>Head - Heart - Hands</strong>: understand the passage, reflect on it, then act on it.</p>
+      <p class="muted">Version ${APP_VERSION}. Works in any modern browser, and installs as an app on Android, iPhone or a computer.</p>
+
+      <h3>The games</h3>
+      <ul>
+        <li><strong>Echo:</strong> read a passage, then retell it in your own words. Audio coming soon.</li>
+        <li><strong>Scene Detective:</strong> watch or read a scene from the Gospels, Acts or Covenant films, then spot the details. Video coming soon.</li>
+        <li><strong>Covenant Quest:</strong> journey through the 12 clips of <em>The Covenant</em> film. Video coming soon.</li>
+        <li><strong>Who Said It:</strong> identify who spoke each Scripture quotation.</li>
+        <li><strong>Story Builder:</strong> put the events of a Bible story in order.</li>
+        <li><strong>Memory Verse:</strong> learn a verse by heart, by filling blanks or typing from memory.</li>
+        <li><strong>Bible Trivia:</strong> ten questions on Bible facts, with three lives and lifelines.</li>
+        <li><strong>Bible Characters:</strong> guess a Bible character from the clues. Fewer clues, more points.</li>
+        <li><strong>Bible Crossword:</strong> solve a crossword of Bible people and places.</li>
+        <li><strong>Word Search:</strong> find Bible words in a letter grid, or unscramble them.</li>
+      </ul>
+
+      <h3>How to play</h3>
+      <ol>
+        <li>Enter your name and choose an avatar and your interface language.</li>
+        <li>Pick a game on the home page, and use the filters if you want.</li>
+        <li>Choose a format, then what to play: a random selection from the whole Bible, the New Testament or the Old Testament, or one or more books you choose.</li>
+        <li>Play, then write a short Heart reflection and choose a Hands mission for the week.</li>
+        <li>Review the answers at the end.</li>
+      </ol>
+
+      <h3>Difficulty</h3>
+      <p>Easy: 5 lives, 3 options, shorter puzzles, and Echo key points. Medium: 3 lives. Hard: 1 life, no lifelines, the longest puzzles, and double Head points.</p>
+
+      <h3>Points and progress</h3>
+      <p>Each game earns points for attending (5), your Head score (multiplied by your level), finishing the Heart reflection (2) and the Hands mission (3). Levels run from Seedling to Champion. Badges reward milestones. Your progress is kept on your device, and you can export it from the Progress screen.</p>
+
+      <h3>Bible text</h3>
+      <p>The King James Version is built in, so Echo works offline with no key. You can also add other Bibles from Bible Brain: type your own free key, choose a country, language and Bible, and download it to your device. Your key is not saved. Check the licence of each Bible you add.</p>
+
+      <h3>Languages</h3>
+      <p>The menus are available in English, Hindi, Malayalam, Tamil, Telugu, Kannada, Bengali, Marathi, Gujarati and Punjabi. The game content is currently in English.</p>
+
+      <h3>Coming soon</h3>
+      <p><strong>Games in other languages.</strong> Partner input is needed to translate the questions, clues and prompts, and to check them for accuracy. Scripture-based games in any Bible will come first. Partners can help by creating a language pack (see the project documents).</p>
+      <p><strong>Audio and video</strong> also need partner input for licences and recordings.</p>
+
+      <h3>Installing and offline use</h3>
+      <p>Open Wordplay in your browser, then add it to your home screen or install it from the browser menu. Once installed, the game screens and the built-in Bible open without an internet connection.</p>
+
+      <h3>Privacy</h3>
+      <ul>
+        <li><strong>Your progress stays on your device</strong> unless you choose to share it.</li>
+        <li><strong>Anonymous usage sharing is off until you agree.</strong> If you agree, we count which games are played, at which level, and the points, using Firebase Analytics. Names and typed text are never sent. You can change your choice on the Progress screen.</li>
+        <li><strong>Shared leaderboard is optional.</strong> If you share, your nickname, level and points are visible to everyone who opens the leaderboard. Use a nickname, not your real name. You can stop sharing at any time, and your score is removed.</li>
+        <li><strong>Under 13:</strong> please ask a parent or teacher before you agree to share.</li>
+      </ul>
+
+      <h3>Content and accuracy</h3>
+      <p>Wordplay is a learning tool. Its questions, clues, passages and summaries are written or generated from the Bible text, and are being reviewed by partner teams. They may contain errors. Check any passage or answer against your own Bible before you use it with a group.</p>
+
+      <h3>Known limits</h3>
+      <ul>
+        <li>Audio and video are coming soon.</li>
+        <li>Some games cover only some books. Books without questions for a game are greyed out in its book picker.</li>
+        <li>Bible Characters rounds are short for books with one or two characters.</li>
+      </ul>
+
+      <h3>Licence and credits</h3>
+      <p>Wordplay is released under the <strong>MIT License</strong>. Copyright (c) 2026 Joshy Kurian. The software is provided as is, without warranty.</p>
+      <p>The King James Version is public domain. The Bible Brain service provides optional Bible text under its terms. The summaries of <em>The Covenant</em> film are based on its script and clip guide. Icons and avatars were drawn for Wordplay.</p>
+      ${contact ? `<p>Contact: <a href="mailto:${escapeHtml(contact)}">${escapeHtml(contact)}</a></p>` : ""}
+    </div>`;
+  paintHeader();
+}
+
+/* ===== SHARED LEADERBOARD (Firestore), opt-in, nickname only =====
+   Each entry is stored as scores/<browserId>_<playerId>. The security rules (firestore.rules)
+   allow only the owner to write their own entry, and check its fields. */
+const APP_VERSION = "1.10.0";
+const NICK_RE = /^[\p{L}\p{N} ]{2,20}$/u;
+function sharedOn(){ return DB.settings.shared === "yes"; }
+function loadLeaderboard(){
+  if(window.__lb) return Promise.resolve(window.__lb);
+  if(!window.__lbLoading){
+    window.__lbLoading = fetch("firebase-config.json", { cache: "no-cache" })
+      .then(r => { if(!r.ok) throw new Error("no config"); return r.json(); })
+      .then(cfg => Promise.all([
+        import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-app.js`),
+        import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-auth.js`),
+        import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-firestore.js`)
+      ]).then(([appM, authM, fsM]) => {
+        const app = appM.initializeApp(cfg.config, "wordplay-leaderboard");
+        window.__lb = { auth: authM.getAuth(app), am: authM, db: fsM.getFirestore(app), fm: fsM };
+        return window.__lb;
+      }))
+      .catch(() => null);
+  }
+  return window.__lbLoading;
+}
+function scoreRef(lb, player){
+  return lb.fm.doc(lb.db, "scores", lb.auth.currentUser.uid + "_" + player.id.replace(/[^A-Za-z0-9]/g, ""));
+}
+async function ensureSignedIn(lb){
+  if(!lb.auth.currentUser) await lb.am.signInAnonymously(lb.auth);
+  return lb.auth.currentUser;
+}
+function publishScore(){
+  if(!sharedOn()) return Promise.resolve(false);
+  const p = activePlayer();
+  if(!p || !p.nick) return Promise.resolve(false);
+  return loadLeaderboard().then(async lb => {
+    if(!lb) return false;
+    await ensureSignedIn(lb);
+    const st = statsFor(p.id);
+    await lb.fm.setDoc(scoreRef(lb, p), {
+      nickname: p.nick, points: st.points, level: levelInfo(st.points).cur.name,
+      games: st.games, updated: lb.fm.serverTimestamp()
+    });
+    return true;
+  }).catch(() => { toast("Your score could not be shared just now. It will be shared after your next game."); return false; });
+}
+function loadTopScores(){
+  const box = document.getElementById("lb-table");
+  if(!box) return;
+  loadLeaderboard().then(async lb => {
+    if(!lb){ box.innerHTML = `<p class="muted">The shared leaderboard is not available right now. Your scores are still saved on this device.</p>`; return; }
+    await ensureSignedIn(lb);
+    const q = lb.fm.query(lb.fm.collection(lb.db, "scores"), lb.fm.orderBy("points", "desc"), lb.fm.limit(20));
+    const snap = await lb.fm.getDocs(q);
+    const rows = snap.docs.map(d => d.data());
+    box.innerHTML = rows.length ? `<table><thead><tr><th>Rank</th><th>Nickname</th><th>Level</th><th>Games</th><th>Points</th></tr></thead><tbody>
+      ${rows.map((r, i) => `<tr><td>${i+1}</td><td>${escapeHtml(r.nickname)}</td><td>${escapeHtml(r.level)}</td><td>${Number(r.games) || 0}</td><td>${Number(r.points) || 0}</td></tr>`).join("")}
+      </tbody></table>` : `<p class="muted">No shared scores yet.</p>`;
+  }).catch(() => { box.innerHTML = `<p class="muted">Could not load the shared leaderboard. Please try again later.</p>`; });
+}
+function shareScore(){
+  const p = activePlayer();
+  const nick = (document.getElementById("lb-nick").value || "").trim();
+  const msg = document.getElementById("lb-msg");
+  if(!NICK_RE.test(nick)){ msg.textContent = "Use 2 to 20 letters, numbers or spaces. Choose a nickname, not your real name."; return; }
+  if(!document.getElementById("lb-agree").checked){ msg.textContent = "Please tick the box to agree."; return; }
+  p.nick = nick; DB.settings.shared = "yes"; saveDB();
+  toast("Shared. Your nickname and points are now on the leaderboard.");
+  publishScore().then(() => showBoard());
+}
+function stopSharing(){
+  const p = activePlayer();
+  DB.settings.shared = "no"; delete p.nick; saveDB();
+  loadLeaderboard().then(async lb => {
+    if(!lb) return;
+    await ensureSignedIn(lb);
+    await lb.fm.deleteDoc(scoreRef(lb, p));
+  }).catch(() => {}).finally(() => { toast("Your score has been removed from the shared leaderboard."); showBoard(); });
+}
+function sharedCard(){
+  const p = activePlayer();
+  if(!sharedOn() || !p || !p.nick){
+    return `<div class="card" role="region" aria-label="Shared leaderboard">
+      <h3>Shared leaderboard</h3>
+      <p class="muted">Show your nickname and points to everyone who opens the shared leaderboard. Your real name is never shown. Players under 13: ask a parent or teacher first.</p>
+      <label for="lb-nick">Nickname (2 to 20 letters or numbers)</label>
+      <input id="lb-nick" maxlength="20" autocomplete="off" placeholder="e.g. Joy Seeker">
+      <label style="display:block;margin:8px 0"><input type="checkbox" id="lb-agree"> I agree to share this nickname and my points.</label>
+      <button onclick="shareScore()">Share my score</button>
+      <p class="note" id="lb-msg"></p>
+    </div>`;
+  }
+  return `<div class="card" role="region" aria-label="Shared leaderboard">
+    <h3>Shared leaderboard (top 20)</h3>
+    <p class="muted">You are sharing as <strong>${escapeHtml(p.nick)}</strong>. <button class="alt" onclick="stopSharing()">Stop sharing and remove my score</button></p>
+    <div id="lb-table"><p class="muted">Loading...</p></div>
+  </div>`;
+}
+
+/* ===== ANONYMOUS ANALYTICS (Firebase), only after the player or a parent agrees =====
    Events never contain names, avatars, or anything typed by a player. */
 const FIREBASE_VERSION = "10.12.2";
 function analyticsOn(){ return DB.settings.analytics === "yes"; }
@@ -2492,26 +2724,28 @@ function loadExtraBank(){
       (j.echo || []).forEach(x => ECHO.push(x));
       (j.chars || []).forEach(x => BIBLE_CHARS.push(x));
       (j.puzzles || []).forEach(x => PUZZLE_BANK.push(x));
+      (j.story || []).forEach(x => STORY.push(x));
+      (j.trivia || []).forEach(x => BIBLE_QUIZ.push(x));
+      (j.who || []).forEach(x => WHO_SAID.push(x));
       return j;
     })
     .catch(() => null);
 }
 /* Pick from the selected book; fall back to the nearest book only if the book has none */
 function pickOne(arr){
-  const b = arr.filter(x => x.book === ctx.book);
+  const b = arr.filter(x => inScope(x.book));
   if(b.length) return b[Math.floor(Math.random() * b.length)];
   return pool(arr, 1)[0];
 }
 function pickMany(arr, n){
-  const b = shuffleArr(arr.filter(x => x.book === ctx.book));
+  const b = shuffleArr(arr.filter(x => inScope(x.book)));
   return b.length >= n ? b.slice(0, n) : pool(arr, n);
 }
 /* Bible Trivia deck: the selected book first, then the same Testament, then the rest */
 function quizDeck(){
-  const book = shuffleArr(BIBLE_QUIZ.filter(q => q.book === ctx.book));
-  const same = shuffleArr(BIBLE_QUIZ.filter(q => q.book !== ctx.book && TEST(q.book) === ctx.testament));
-  const other = shuffleArr(BIBLE_QUIZ.filter(q => TEST(q.book) !== ctx.testament));
-  return [...book, ...same, ...other].slice(0, QUIZ_LENGTH);
+  const inside = shuffleArr(BIBLE_QUIZ.filter(q => inScope(q.book)));
+  const outside = shuffleArr(BIBLE_QUIZ.filter(q => !inScope(q.book)));
+  return [...inside, ...outside].slice(0, QUIZ_LENGTH);
 }
 
 /* ---- storage: downloaded chapters live in IndexedDB (memory fallback if unavailable) ---- */
