@@ -75,7 +75,7 @@ th,td{padding:8px;border-bottom:1px solid rgba(127,127,127,.2);text-align:left;f
 .xc{position:relative}
 .xc input{width:100%;aspect-ratio:1;text-align:center;text-transform:uppercase;font-weight:700;font-size:clamp(12px,3.6vw,17px);border:1px solid rgba(127,127,127,.5);border-radius:4px;background:var(--card);color:var(--ink);padding:0}
 .xn{position:absolute;top:1px;left:3px;font-size:9px;color:var(--muted);pointer-events:none;z-index:1}
-.clues{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:.88rem}
+.clues{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:.88rem}.xw-clues{list-style:none;padding-left:0;margin:6px 0}.xw-clues li{margin:4px 0}
 .ws{display:grid;gap:2px;margin:10px 0}
 .ws div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:var(--bg);border-radius:4px;font-weight:700;font-size:clamp(11px,3.2vw,15px);cursor:pointer;user-select:none}
 .ws .sel{background:var(--gold);color:#222}
@@ -1663,7 +1663,8 @@ function runCrossword(){
       grid += `<div class="xc">${n ? `<span class="xn">${n}</span>` : ""}<input maxlength="1" data-key="${key}" data-a="${L}" autocomplete="off"></div>`;
     }
   }
-  const clue = p => `<li><strong>${starts[p.r + "," + p.c]}.</strong> ${escapeHtml(p.clue)} (${p.w.length})</li>`;
+  const clue = p => `<li><strong>${starts[p.r + "," + p.c]}</strong> ${escapeHtml(p.clue)} (${p.w.length})</li>`;
+  const numbersOf = list => list.map(p => starts[p.r + "," + p.c]).join(", ");
   stage().innerHTML = `
     <div class="card">
       <span class="badge b-head">Head - Crossword</span>
@@ -1671,12 +1672,25 @@ function runCrossword(){
       ${notice([entry])}
       <div class="xw" style="grid-template-columns:repeat(${W},minmax(0,1fr))">${grid}</div>
       <div class="clues">
-        <div><strong>Across</strong><ol style="padding-left:18px">${across.map(clue).join("")}</ol></div>
-        <div><strong>Down</strong><ol style="padding-left:18px">${down.map(clue).join("")}</ol></div>
+        <div><strong>Across</strong> <span class="muted">${numbersOf(across)}</span><ul class="xw-clues">${across.map(clue).join("")}</ul></div>
+        <div><strong>Down</strong> <span class="muted">${numbersOf(down)}</span><ul class="xw-clues">${down.map(clue).join("")}</ul></div>
       </div>
       <button id="xw-check">Check answers</button>
       <div id="xw-res"></div>
     </div>`;
+  // typing one letter moves to the next box (next column, then next row); Backspace in an empty box goes back
+  const boxes = [...document.querySelectorAll(".xc input")];
+  boxes.forEach((inp, i) => {
+    inp.addEventListener("input", () => {
+      inp.value = inp.value.slice(-1);
+      if(inp.value && boxes[i + 1]){ boxes[i + 1].focus(); boxes[i + 1].select(); }
+    });
+    inp.addEventListener("keydown", e => {
+      if(e.key === "Backspace" && !inp.value && boxes[i - 1]){
+        e.preventDefault(); boxes[i - 1].focus(); boxes[i - 1].value = ""; boxes[i - 1].select();
+      }
+    });
+  });
   document.getElementById("xw-check").onclick = () => {
     let solved = 0;
     document.querySelectorAll(".xc input").forEach(inp => {
@@ -1693,8 +1707,17 @@ function runCrossword(){
       if(all) solved++;
       addReview(p.clue, p.w, all);
     });
+    // reveal: wrong or empty boxes show the correct letter (in gold)
+    document.querySelectorAll(".xc input").forEach(inp => {
+      if(inp.value.trim().toUpperCase() !== inp.dataset.a){
+        inp.value = inp.dataset.a; inp.style.color = "#b8860b"; inp.title = "Correct answer";
+      }
+    });
+    const keyLine = p => `<li><strong>${starts[p.r + "," + p.c]}</strong> ${escapeHtml(p.clue)} - <strong>${escapeHtml(p.w)}</strong></li>`;
+    const answerKey = `<div><strong>Across</strong><ul class="xw-clues">${across.map(keyLine).join("")}</ul></div><div><strong>Down</strong><ul class="xw-clues">${down.map(keyLine).join("")}</ul></div>`;
     document.getElementById("xw-res").innerHTML = `
       <div class="feedback"><span class="score">${solved} of ${placed.length} words correct</span></div>
+      <div class="answers"><strong>Correct answers</strong><div class="clues">${answerKey}</div></div>
       <button id="xw-next">Continue to Heart and Hands</button>`;
     document.getElementById("xw-next").onclick = () => withHH("Bible Crossword", solved, placed.length,
       "Which person or place from this crossword would you like to read about more?",

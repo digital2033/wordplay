@@ -2,6 +2,25 @@
 
 All notable changes to Wordplay are recorded here. Versions follow the form `major.minor`.
 
+## 1.15.2 - Crossword clues: Across and Down with their numbers
+
+### Changed
+- The clue lists show the number of each word in the grid, with no extra 1, 2, 3 numbering. Each heading shows its numbers, for example "Across 2, 5" and "Down 1, 3, 4".
+- Across and Down are both listed, in separate columns.
+- The Correct answers list is grouped into Across and Down.
+
+### Added
+- The crossword check now has 10 tests.
+
+## 1.15.1 - Crossword: typing moves on, and answers are shown
+
+### Changed
+- Typing a letter moves to the next box (the next column, then the next row). Backspace in an empty box moves back.
+- Check Answers shows the correct answer for every word, and fills any wrong or empty box with its correct letter (in gold).
+
+### Added
+- `tests/crossword_check.py`: 7 checks.
+
 ## 1.15.0 - Firebase setup for the shared leaderboard and analytics
 
 ### Added

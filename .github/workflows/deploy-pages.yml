@@ -78,6 +78,7 @@ jobs:
           python3 tests/about_check.py
           python3 tests/scope_check.py
           python3 tests/names_check.py
+          python3 tests/crossword_check.py
 
   deploy:
     needs: test
